@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { projects } from '../data/portfolioData';
 
 // Project Media Imports
@@ -81,8 +81,8 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
     data-aos-delay={aosDelay}
     className={`relative rounded-3xl p-[1px] group transition-all duration-500 ${
       project.isFlagship 
-        ? 'bg-gradient-to-br from-violet-500/60 via-fuchsia-500/20 to-indigo-500/40 hover:from-violet-400 hover:via-fuchsia-400/50 hover:to-indigo-400 shadow-[0_10px_40px_rgba(139,92,246,0.2)]' 
-        : 'bg-white/10 hover:bg-violet-500/30'
+        ? 'bg-gradient-to-br from-emerald-500/60 via-teal-500/20 to-teal-500/40 hover:from-emerald-400 hover:via-teal-400/50 hover:to-teal-400 shadow-[0_10px_40px_rgba(16,185,129,0.2)]' 
+        : 'bg-white/10 hover:bg-emerald-500/30'
     }`}
   >
     <div className={`rounded-3xl p-6 md:p-10 h-full backdrop-blur-xl transition-all duration-500 flex flex-col justify-between ${
@@ -94,8 +94,8 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
         {/* Top Meta: Badge & Number */}
         <div className="flex justify-between items-center mb-4">
           {project.badge ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-violet-300 bg-violet-500/15 px-3.5 py-1.5 rounded-full border border-violet-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-violet-300 bg-emerald-500/15 px-3.5 py-1.5 rounded-full border border-emerald-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               {project.badge}
             </span>
           ) : <span />}
@@ -120,7 +120,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
                 <div 
                   key={idx}
                   onClick={() => onImageClick(item.img, item.title, item.desc)}
-                  className="group/img relative rounded-2xl overflow-hidden border border-violet-500/20 bg-black/40 cursor-pointer hover:border-violet-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all duration-300"
+                  className="group/img relative rounded-2xl overflow-hidden border border-emerald-500/20 bg-black/40 cursor-pointer hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all duration-300"
                 >
                   <div className="aspect-video overflow-hidden relative">
                     <img 
@@ -128,20 +128,20 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
                       alt={item.title} 
                       className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
                     />
-                    <div className="absolute inset-0 bg-violet-950/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-emerald-950/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="p-2 rounded-full bg-black/70 text-white border border-white/20">
                         <ZoomIcon />
                       </span>
                     </div>
                   </div>
-                  <div className="p-2.5 bg-[#140b2e]/90 text-left border-t border-violet-500/10">
+                  <div className="p-2.5 bg-[#140b2e]/90 text-left border-t border-emerald-500/10">
                     <p className="text-white text-xs font-bold truncate">{item.title}</p>
                     <p className="text-violet-300/70 text-[10px] truncate">{item.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-violet-400/60 text-xs mt-2.5 italic text-right font-mono flex items-center justify-end gap-1">
+            <p className="text-emerald-400/60 text-xs mt-2.5 italic text-right font-mono flex items-center justify-end gap-1">
               <ZoomIcon /> Click any view to inspect HD interface details
             </p>
           </div>
@@ -149,13 +149,13 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
 
         {/* Secure LLM Gateway: Video Demonstration Embed */}
         {project.id === "secure-llm-gateway" && (
-          <div className="my-6 rounded-2xl overflow-hidden border border-violet-500/25 bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
+          <div className="my-6 rounded-2xl overflow-hidden border border-emerald-500/25 bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
             <div className="px-4 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between text-xs font-mono text-white/70">
               <span className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-violet-400 animate-pulse"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 Live AI Gateway Video Demo
               </span>
-              <span className="text-violet-400">1080p HD</span>
+              <span className="text-emerald-400">1080p HD</span>
             </div>
             <video 
               controls 
@@ -177,7 +177,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
                 <div 
                   key={idx}
                   onClick={() => onImageClick(item.img, item.title, item.desc)}
-                  className="group/img relative rounded-2xl overflow-hidden border border-violet-500/20 bg-black/40 cursor-pointer hover:border-violet-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all duration-300"
+                  className="group/img relative rounded-2xl overflow-hidden border border-emerald-500/20 bg-black/40 cursor-pointer hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all duration-300"
                 >
                   <div className="aspect-video overflow-hidden relative">
                     <img 
@@ -185,13 +185,13 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
                       alt={item.title} 
                       className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
                     />
-                    <div className="absolute inset-0 bg-violet-950/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-emerald-950/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="p-2 rounded-full bg-black/70 text-white border border-white/20">
                         <ZoomIcon />
                       </span>
                     </div>
                   </div>
-                  <div className="p-2.5 bg-[#140b2e]/90 text-left border-t border-violet-500/10">
+                  <div className="p-2.5 bg-[#140b2e]/90 text-left border-t border-emerald-500/10">
                     <p className="text-white text-xs font-bold truncate">{item.title}</p>
                     <p className="text-violet-300/70 text-[10px] truncate">{item.desc}</p>
                   </div>
@@ -208,7 +208,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
               <div 
                 key={idx}
                 onClick={() => onImageClick(item.img, item.title, item.desc)}
-                className="group/img relative rounded-2xl overflow-hidden border border-violet-500/20 bg-black/40 cursor-pointer hover:border-violet-400 transition-all duration-300"
+                className="group/img relative rounded-2xl overflow-hidden border border-emerald-500/20 bg-black/40 cursor-pointer hover:border-emerald-400 transition-all duration-300"
               >
                 <div className="aspect-video overflow-hidden">
                   <img 
@@ -217,7 +217,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
                     className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" 
                   />
                 </div>
-                <div className="p-2.5 bg-[#140b2e]/90 text-left border-t border-violet-500/10">
+                <div className="p-2.5 bg-[#140b2e]/90 text-left border-t border-emerald-500/10">
                   <p className="text-white text-xs font-bold truncate">{item.title}</p>
                   <p className="text-violet-300/70 text-[10px] truncate">{item.desc}</p>
                 </div>
@@ -234,7 +234,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
                 <div 
                   key={idx}
                   onClick={() => onImageClick(item.img, item.title, "C++ SFML Game Engine")}
-                  className="group/game relative rounded-xl overflow-hidden border border-violet-500/20 bg-black/40 cursor-pointer hover:border-violet-400 transition-all duration-300"
+                  className="group/game relative rounded-xl overflow-hidden border border-emerald-500/20 bg-black/40 cursor-pointer hover:border-emerald-400 transition-all duration-300"
                 >
                   <div className="aspect-[4/3] overflow-hidden">
                     <img 
@@ -257,7 +257,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
           {project.techTags.map((tag) => (
             <span 
               key={tag}
-              className="px-3 py-1 text-xs font-semibold text-violet-200 bg-violet-500/10 rounded-full border border-violet-500/25 hover:bg-violet-500/20 hover:border-violet-400 transition-all duration-300 cursor-default"
+              className="px-3 py-1 text-xs font-semibold text-violet-200 bg-emerald-500/10 rounded-full border border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-400 transition-all duration-300 cursor-default"
             >
               {tag}
             </span>
@@ -266,7 +266,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 pt-4 border-t border-violet-500/20">
+      <div className="flex flex-wrap gap-3 pt-4 border-t border-emerald-500/20">
         {project.links.github && (
           <a 
             href={project.links.github}
@@ -284,7 +284,7 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
             href={project.links.demo}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:shadow-[0_0_25px_rgba(168,85,247,0.6)] transition-all duration-300 transform hover:scale-105"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] transition-all duration-300 transform hover:scale-105"
           >
             <ExternalLinkIcon />
             Open Live Application
@@ -322,16 +322,16 @@ const Projects = () => {
   };
 
   return (
-    <section id="projects" className="bg-[#07050e] pt-24 pb-32 px-6 md:px-12 w-full relative overflow-hidden font-sans">
+    <section id="projects" className="bg-[#050f09] pt-24 pb-32 px-6 md:px-12 w-full relative overflow-hidden font-sans">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[160px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -left-40 w-[500px] h-[500px] bg-fuchsia-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -left-40 w-[500px] h-[500px] bg-teal-600/10 rounded-full blur-[160px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
         <div data-aos="fade-up" className="mb-16 text-center">
-          <div className="inline-block border border-violet-500/30 rounded-full px-5 py-1.5 text-xs text-violet-400 font-bold mb-5 shadow-sm bg-violet-500/10 backdrop-blur-sm">
+          <div className="inline-block border border-emerald-500/30 rounded-full px-5 py-1.5 text-xs text-emerald-400 font-bold mb-5 shadow-sm bg-emerald-500/10 backdrop-blur-sm">
             Featured Systems
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 uppercase">
@@ -363,11 +363,11 @@ const Projects = () => {
           onClick={closeModal}
         >
           <div 
-            className="relative max-w-5xl w-full bg-[#100727] border border-violet-500/40 rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.4)] flex flex-col"
+            className="relative max-w-5xl w-full bg-[#100727] border border-emerald-500/40 rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(16,185,129,0.4)] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header bar */}
-            <div className="px-6 py-4 bg-[#140b33] border-b border-violet-500/20 flex justify-between items-center">
+            <div className="px-6 py-4 bg-[#140b33] border-b border-emerald-500/20 flex justify-between items-center">
               <div>
                 <h4 className="text-white font-bold text-base md:text-lg">{activeModal.title}</h4>
                 {activeModal.desc && (
@@ -376,10 +376,10 @@ const Projects = () => {
               </div>
               <button 
                 onClick={closeModal}
-                className="w-9 h-9 rounded-full bg-white/10 hover:bg-violet-600 text-white flex items-center justify-center transition-colors text-lg"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-emerald-600 text-white flex items-center justify-center transition-colors text-lg"
                 aria-label="Close modal"
               >
-                ✕
+                âœ•
               </button>
             </div>
 
@@ -393,11 +393,11 @@ const Projects = () => {
             </div>
 
             {/* Footer bar */}
-            <div className="px-6 py-3 bg-[#140b33] border-t border-violet-500/20 flex justify-between items-center text-xs text-white/60">
+            <div className="px-6 py-3 bg-[#140b33] border-t border-emerald-500/20 flex justify-between items-center text-xs text-white/60">
               <span>Full Resolution Showcase</span>
               <button 
                 onClick={closeModal}
-                className="px-4 py-1.5 rounded-full bg-violet-600/30 hover:bg-violet-600 text-white font-semibold transition-colors"
+                className="px-4 py-1.5 rounded-full bg-emerald-600/30 hover:bg-emerald-600 text-white font-semibold transition-colors"
               >
                 Close (Esc)
               </button>
@@ -410,3 +410,4 @@ const Projects = () => {
 };
 
 export default Projects;
+

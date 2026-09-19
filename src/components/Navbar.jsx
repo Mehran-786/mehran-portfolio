@@ -27,9 +27,9 @@ const Navbar = () => {
     <nav 
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         isOpen 
-          ? 'bg-[#0f0924]/95 backdrop-blur-xl border-b border-violet-500/20 py-4 shadow-2xl'
+          ? 'bg-[#020d06]/95 backdrop-blur-xl border-b border-emerald-500/20 py-4 shadow-2xl'
           : isScrolled 
-            ? 'bg-[#090517]/85 backdrop-blur-lg border-b border-violet-500/15 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)]' 
+            ? 'bg-[#020a05]/85 backdrop-blur-lg border-b border-emerald-500/15 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)]' 
             : 'bg-transparent py-6'
       }`}
     >
@@ -42,11 +42,11 @@ const Navbar = () => {
               <img 
                 src={brandLogo} 
                 alt={personalInfo.brandName} 
-                className="w-10 h-10 rounded-full object-cover border-2 border-violet-500/60 shadow-[0_0_15px_rgba(139,92,246,0.5)] group-hover:scale-105 transition-transform" 
+                className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)] group-hover:scale-105 transition-transform" 
               />
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-black rounded-full"></span>
             </div>
-            <span>{personalInfo.brandName}<span className="text-violet-400">.</span></span>
+            <span>{personalInfo.brandName}<span className="text-emerald-400">.</span></span>
           </a>
         </div>
 
@@ -60,7 +60,7 @@ const Navbar = () => {
             >
               {link}
               {/* Smooth hover underline */}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300 group-hover:w-full"></span>
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300 group-hover:w-full"></span>
             </a>
           ))}
         </div>
@@ -69,7 +69,7 @@ const Navbar = () => {
         <div className="hidden md:block">
           <a 
             href={hireMeMailto}
-            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 border border-violet-500/40 text-white font-semibold hover:from-violet-600 hover:to-fuchsia-600 hover:shadow-[0_0_25px_rgba(168,85,247,0.5)] transition-all duration-300 backdrop-blur-md text-sm"
+            className="px-6 py-2.5 rounded-full bg-gradient-to-r from-emerald-600/30 to-teal-600/30 border border-emerald-500/40 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all duration-300 backdrop-blur-md text-sm"
           >
             Hire Me
           </a>
@@ -96,7 +96,7 @@ const Navbar = () => {
       {/* Mobile Slide-Down Menu */}
       <div 
         className={`md:hidden absolute top-full left-0 w-full transition-all duration-300 overflow-hidden ${
-          isOpen ? 'max-h-96 py-6 opacity-100 bg-[#0d0722]/98 backdrop-blur-2xl border-b border-violet-500/20 shadow-2xl' : 'max-h-0 opacity-0 bg-transparent'
+          isOpen ? 'max-h-96 py-6 opacity-100 bg-[#020d06]/98 backdrop-blur-2xl border-b border-emerald-500/20 shadow-2xl' : 'max-h-0 opacity-0 bg-transparent'
         }`}
       >
         <div className="flex flex-col px-6 space-y-4">
@@ -105,7 +105,7 @@ const Navbar = () => {
               key={link} 
               href={`#${link.toLowerCase()}`}
               onClick={() => setIsOpen(false)}
-              className="text-white/80 hover:text-violet-400 font-semibold text-lg py-2 border-b border-white/5 transition-colors"
+              className="text-white/80 hover:text-emerald-400 font-semibold text-lg py-2 border-b border-white/5 transition-colors"
             >
               {link}
             </a>
@@ -114,7 +114,7 @@ const Navbar = () => {
             <a 
               href={hireMeMailto}
               onClick={() => setIsOpen(false)}
-              className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-bold hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] transition-all w-full text-center shadow-lg"
+              className="inline-block px-6 py-3 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all w-full text-center shadow-lg"
             >
               Hire Me
             </a>

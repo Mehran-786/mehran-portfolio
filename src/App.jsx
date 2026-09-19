@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import Preloader from './components/Preloader'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
@@ -36,3 +36,4 @@ function App() {
 }
 
 export default App
+

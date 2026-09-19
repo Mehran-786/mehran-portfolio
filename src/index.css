@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-accent-violet: #8b5cf6;
-  --color-accent-purple: #a855f7;
-  --color-accent-fuchsia: #ec4899;
-  --color-accent-indigo: #6366f1;
+  --color-accent-emerald: #10b981;
+  --color-accent-teal: #14b8a6;
+  --color-accent-green: #22c55e;
+  --color-accent-dark-emerald: #059669;
 
   --animate-float: float 6s ease-in-out infinite;
   --animate-pulse-glow: pulseGlow 3s ease-in-out infinite;
@@ -27,25 +27,25 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background-color: #07050e;
+  background-color: #050f09;
   color: #fff;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
 }
 
-/* Custom Cyber Violet Scrollbar */
+/* Emerald Green Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #090615;
+  background: #020a05;
 }
 ::-webkit-scrollbar-thumb {
-  background: #7c3aed;
+  background: #059669;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9333ea;
+  background: #10b981;
 }
 
 [data-aos="drop-bounce"] {
@@ -64,14 +64,14 @@ body {
   100% { transform: translateY(0); opacity: 1; }
 }
 
-/* Glassmorphic utilities */
+/* Glassmorphic utilities — Emerald */
 .glass-panel {
-  background: rgba(18, 12, 38, 0.7);
+  background: rgba(5, 15, 9, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(139, 92, 246, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.18);
 }
 
 .glass-panel:hover {
-  border-color: rgba(168, 85, 247, 0.4);
+  border-color: rgba(16, 185, 129, 0.4);
 }

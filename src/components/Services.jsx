@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+﻿import React, { useRef, useState } from 'react';
 import { motion, useScroll, useSpring, useMotionValueEvent } from 'framer-motion';
 import { skillsContent } from '../data/portfolioData';
 
@@ -33,7 +33,7 @@ const TagCard = ({ number, title, text, className, aosDelay, aosType, pathLength
       data-aos-delay={aosDelay}
       className={`w-72 sm:w-80 rounded-[2rem] p-2 relative flex flex-col items-center hover:scale-[1.02] transition-all duration-700 z-10 ${className} ${
         isActive 
-          ? 'bg-gradient-to-br from-violet-600 to-purple-700 border-violet-400 shadow-[0_20px_50px_rgba(139,92,246,0.45)]' 
+          ? 'bg-gradient-to-br from-emerald-600 to-purple-700 border-emerald-400 shadow-[0_20px_50px_rgba(16,185,129,0.45)]' 
           : 'bg-white border border-gray-200 shadow-[0_15px_40px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]'
       }`}
     >
@@ -44,7 +44,7 @@ const TagCard = ({ number, title, text, className, aosDelay, aosType, pathLength
       
       {/* Inner container */}
       <div className={`w-full h-full rounded-[1.5rem] mt-8 p-8 flex flex-col min-h-[220px] transition-colors duration-700 ${
-        isActive ? 'bg-violet-950/70' : 'bg-[#f4f4f4]'
+        isActive ? 'bg-emerald-950/70' : 'bg-[#f4f4f4]'
       }`}>
         <span className={`text-xl font-bold mb-2 font-serif italic transition-colors duration-700 ${
           isActive ? 'text-violet-300' : 'text-gray-400'
@@ -84,13 +84,13 @@ const Services = () => {
         
         {/* Header Content */}
         <div data-aos="fade-up" className="md:absolute top-10 left-0 md:w-[450px] z-20 mb-16 md:mb-0">
-          <div className="inline-block border border-violet-500/30 rounded-full px-5 py-1.5 text-xs text-violet-700 font-bold mb-8 shadow-sm bg-violet-50">
+          <div className="inline-block border border-emerald-500/30 rounded-full px-5 py-1.5 text-xs text-emerald-700 font-bold mb-8 shadow-sm bg-violet-50">
             {skillsContent.badge}
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 leading-[1.1] mb-6 tracking-tight relative">
             {skillsContent.heading}
             {/* Hand-drawn arrow */}
-            <svg className="absolute -bottom-10 right-10 w-12 h-12 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="absolute -bottom-10 right-10 w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M4 4 Q 10 10 15 15 M 15 15 L 10 15 M 15 15 L 15 10" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </h2>
@@ -204,7 +204,7 @@ const Services = () => {
           <div 
             data-aos="fade-in" 
             data-aos-delay="600"
-            className="hidden md:block absolute top-[1250px] left-[60%] font-serif italic font-bold text-3xl text-violet-700 rotate-6 drop-shadow-sm"
+            className="hidden md:block absolute top-[1250px] left-[60%] font-serif italic font-bold text-3xl text-emerald-700 rotate-6 drop-shadow-sm"
           >
             {skillsContent.endText}
           </div>
@@ -217,3 +217,4 @@ const Services = () => {
 };
 
 export default Services;
+

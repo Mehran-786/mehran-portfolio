@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+﻿import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { emailjsConfig, personalInfo, socialLinks } from '../data/portfolioData';
 
@@ -73,14 +73,14 @@ const Contact = () => {
   };
 
   return (
-    <section ref={ref} id="contact" className="bg-[#07050e] w-full min-h-screen relative overflow-hidden flex items-end pt-32 pb-0 border-t border-violet-950/40">
+    <section ref={ref} id="contact" className="bg-[#050f09] w-full min-h-screen relative overflow-hidden flex items-end pt-32 pb-0 border-t border-emerald-950/40">
       {/* Huge Background Parallax Text */}
       <motion.div 
         style={{ y }}
         className="absolute top-0 left-0 w-full h-full flex flex-col justify-start items-center overflow-hidden pointer-events-none z-0 pt-16 md:pt-12 opacity-15"
       >
         <h1 
-          className="text-[25vw] leading-[0.75] font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-violet-500 uppercase tracking-tighter select-none scale-y-[1.6] origin-top"
+          className="text-[25vw] leading-[0.75] font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-emerald-500 uppercase tracking-tighter select-none scale-y-[1.6] origin-top"
           style={{ fontFamily: "'Impact', 'Arial Black', sans-serif" }}
         >
           Contact
@@ -91,11 +91,11 @@ const Contact = () => {
       <div className="relative z-10 w-full flex justify-end items-end">
         <div 
           data-aos="fade-up"
-          className="bg-gradient-to-br from-[#160b33]/95 via-[#100726]/98 to-[#090417]/98 border-t border-l border-violet-500/30 rounded-tl-[2.5rem] md:rounded-tl-[3.5rem] w-full md:w-[85%] lg:w-[75%] p-8 md:p-16 text-white flex flex-col justify-between shadow-[0_-20px_60px_rgba(139,92,246,0.15)] backdrop-blur-2xl"
+          className="bg-gradient-to-br from-[#160b33]/95 via-[#071a0f]/98 to-[#090417]/98 border-t border-l border-emerald-500/30 rounded-tl-[2.5rem] md:rounded-tl-[3.5rem] w-full md:w-[85%] lg:w-[75%] p-8 md:p-16 text-white flex flex-col justify-between shadow-[0_-20px_60px_rgba(16,185,129,0.15)] backdrop-blur-2xl"
         >
           <div className="flex flex-col sm:flex-row justify-between items-start gap-8 mb-12">
             <div>
-              <span className="text-xs font-bold tracking-[0.25em] uppercase text-violet-400 block mb-2 font-mono">
+              <span className="text-xs font-bold tracking-[0.25em] uppercase text-emerald-400 block mb-2 font-mono">
                 Initiate Dialogue
               </span>
               <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
@@ -108,7 +108,7 @@ const Contact = () => {
               href={socialLinks.instagram} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="flex items-center gap-2 text-xs font-black uppercase tracking-wider bg-violet-500/10 hover:bg-violet-600 hover:text-white border border-violet-500/30 px-4 py-2 rounded-full transition-all duration-300"
+              className="flex items-center gap-2 text-xs font-black uppercase tracking-wider bg-emerald-500/10 hover:bg-emerald-600 hover:text-white border border-emerald-500/30 px-4 py-2 rounded-full transition-all duration-300"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
               DM on Instagram
@@ -126,7 +126,7 @@ const Contact = () => {
                     name="first_name"
                     placeholder="First Name" 
                     required
-                    className="w-full bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-violet-400 transition-colors placeholder-white/50 font-medium rounded-none text-white"
+                    className="w-full bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-emerald-400 transition-colors placeholder-white/50 font-medium rounded-none text-white"
                   />
                 </div>
                 <div className="relative">
@@ -135,7 +135,7 @@ const Contact = () => {
                     id="lastName" 
                     name="last_name"
                     placeholder="Last Name" 
-                    className="w-full bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-violet-400 transition-colors placeholder-white/50 font-medium rounded-none text-white"
+                    className="w-full bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-emerald-400 transition-colors placeholder-white/50 font-medium rounded-none text-white"
                   />
                 </div>
                 <div className="relative">
@@ -145,7 +145,7 @@ const Contact = () => {
                     name="user_email"
                     placeholder="Email Address" 
                     required
-                    className="w-full bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-violet-400 transition-colors placeholder-white/50 font-medium rounded-none text-white"
+                    className="w-full bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-emerald-400 transition-colors placeholder-white/50 font-medium rounded-none text-white"
                   />
                 </div>
               </div>
@@ -158,7 +158,7 @@ const Contact = () => {
                     name="message"
                     placeholder="Tell me about your project or inquiry..." 
                     required
-                    className="w-full h-full min-h-[140px] bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-violet-400 transition-colors placeholder-white/50 font-medium resize-none rounded-none text-white"
+                    className="w-full h-full min-h-[140px] bg-transparent border-b border-white/20 pb-3 text-base md:text-lg focus:outline-none focus:border-emerald-400 transition-colors placeholder-white/50 font-medium resize-none rounded-none text-white"
                   ></textarea>
                 </div>
               </div>
@@ -172,7 +172,7 @@ const Contact = () => {
                   type="checkbox" 
                   id="permission" 
                   defaultChecked
-                  className="mt-1 w-4 h-4 rounded-sm border-white/30 bg-transparent text-violet-600 focus:ring-violet-500 cursor-pointer accent-violet-500" 
+                  className="mt-1 w-4 h-4 rounded-sm border-white/30 bg-transparent text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-500" 
                 />
                 <label htmlFor="permission" className="cursor-pointer max-w-[320px] leading-snug">
                   I give permission to contact me at this email regarding this inquiry.
@@ -194,12 +194,12 @@ const Contact = () => {
                     disabled={status === 'sending'}
                     className={`px-8 py-3.5 rounded-full font-bold flex items-center justify-center gap-3 transition-all duration-300 group whitespace-nowrap self-start sm:self-auto ${
                       status === 'sending' 
-                        ? 'opacity-50 cursor-not-allowed bg-violet-600/50 text-white' 
+                        ? 'opacity-50 cursor-not-allowed bg-emerald-600/50 text-white' 
                         : status === 'success'
                         ? 'bg-green-600 text-white shadow-[0_0_25px_rgba(34,197,94,0.5)]'
                         : status === 'error'
                         ? 'bg-rose-800 text-white'
-                        : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transform hover:scale-105'
+                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] transform hover:scale-105'
                     }`}
                   >
                     {status === 'sending' ? (
@@ -212,11 +212,11 @@ const Contact = () => {
                       </span>
                     ) : status === 'success' ? (
                       <span className="flex items-center gap-2">
-                        Transmitted Successfully ✓
+                        Transmitted Successfully âœ“
                       </span>
                     ) : status === 'error' ? (
                       <span className="flex items-center gap-2">
-                        Failed — Please Retry
+                        Failed â€” Please Retry
                       </span>
                     ) : 'Send Inquiry'}
                     
@@ -238,3 +238,4 @@ const Contact = () => {
 };
 
 export default Contact;
+
