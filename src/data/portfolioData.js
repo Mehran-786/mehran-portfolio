@@ -23,14 +23,14 @@ export const socialLinks = {
   github: "https://github.com/Mehran-786",
   linkedin: "https://www.linkedin.com/in/mehran-rasool-445613402",
   instagram: "https://www.instagram.com/codemechanic0/",
-  toolLive: "https://video-downloader-lemon-three.vercel.app/#",
+  toolLive: "/projects#tool-website",
 };
 
 export const heroContent = {
   greeting: "Hi, I'm Mehran Rasool",
-  titleHighlight: "Full-Stack AI Engineer & Systems Architect",
+  titleHighlight: "Full-Stack Web & Flutter App Developer",
   subtitle:
-    "I architect autonomous multi-agent AI ecosystems, cross-platform Flutter applications, secure LLM gateways, and high-performance C++ platforms.",
+    "Mehran Rasool is a full-stack developer based in Wah Cantt, Pakistan, who builds web applications, Flutter mobile apps, and applied AI systems.",
   ctaPrimary: { text: "Explore My Work", href: "#projects" },
   ctaSecondary: {
     text: "Get In Touch",
@@ -315,7 +315,7 @@ export const projects = [
     ],
     links: {
       github: "https://github.com/Mehran-786",
-      demo: "https://video-downloader-lemon-three.vercel.app/#",
+      demo: "/projects#tool-website",
     },
     screenshots: [
       { url: "/src/assets/projects/tool-website-main.jpeg", caption: "DownSocial Video Downloader Hub" },

@@ -1,21 +1,27 @@
-﻿import React from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import { personalInfo, socialLinks, footerContent } from '../data/portfolioData';
 
 const Footer = () => {
   return (
-    <footer className="bg-[#05030a] text-white/60 py-16 px-6 md:px-12 w-full font-mono text-[10px] md:text-xs tracking-widest flex flex-col justify-between min-h-[45vh] border-t border-emerald-950/40">
+    <footer className="bg-[#030805] text-white/60 py-16 px-6 md:px-12 w-full font-mono text-[10px] md:text-xs tracking-widest flex flex-col justify-between min-h-[45vh] border-t border-emerald-950/40">
       
       {/* Top Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 w-full font-medium">
         <div className="flex flex-col gap-1.5">
           {footerContent.taglines.map((line, i) => (
-            <p key={i} className="text-violet-300/80">{line}</p>
+            <p key={i} className="text-emerald-300/80">{line}</p>
           ))}
         </div>
         
-        <div className="flex flex-col gap-1 md:items-center">
+        <div className="flex flex-col gap-2 md:items-center">
           <p className="text-white font-bold">{footerContent.credential}</p>
-          <a href="#projects" className="underline text-emerald-400 hover:text-white transition-colors mt-1 underline-offset-4 decoration-1">View Featured Systems</a>
+          <div className="flex flex-wrap gap-4 mt-1">
+            <Link to="/about" className="underline text-emerald-400 hover:text-white transition-colors underline-offset-4 decoration-1">About</Link>
+            <Link to="/projects" className="underline text-emerald-400 hover:text-white transition-colors underline-offset-4 decoration-1">Projects</Link>
+            <Link to="/reviews" className="underline text-emerald-400 hover:text-white transition-colors underline-offset-4 decoration-1">Reviews</Link>
+            <Link to="/contact" className="underline text-emerald-400 hover:text-white transition-colors underline-offset-4 decoration-1">Contact</Link>
+          </div>
         </div>
         
         <div className="flex flex-col gap-1 md:items-end">
@@ -23,13 +29,13 @@ const Footer = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
             Available for High-Impact Roles
           </p>
-          <p>{new Date().getFullYear()} Â· Global Availability</p>
+          <p>{new Date().getFullYear()} · Wah Cantt / Islamabad, Pakistan</p>
         </div>
       </div>
 
       {/* Middle Huge Text */}
       <div className="w-full flex justify-center items-center py-16 md:py-20 overflow-hidden">
-        <h2 className="text-[18vw] md:text-[16vw] leading-none font-sans font-black tracking-tighter lowercase select-none text-transparent bg-clip-text bg-gradient-to-b from-white/90 via-violet-300/40 to-emerald-950/10 w-full text-center">
+        <h2 className="text-[18vw] md:text-[16vw] leading-none font-sans font-black tracking-tighter lowercase select-none text-transparent bg-clip-text bg-gradient-to-b from-white/90 via-emerald-400/40 to-emerald-950/10 w-full text-center">
           {personalInfo.brandName.toLowerCase()}
         </h2>
       </div>
@@ -37,14 +43,14 @@ const Footer = () => {
       {/* Bottom Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 w-full items-end font-medium">
         <div className="flex flex-col gap-4">
-          <a href="#contact" className="underline text-emerald-400 hover:text-white transition-colors underline-offset-4 decoration-1 font-bold">Initiate Dialogue</a>
+          <Link to="/contact" className="underline text-emerald-400 hover:text-white transition-colors underline-offset-4 decoration-1 font-bold">Initiate Dialogue</Link>
           <p className="text-white/50 font-mono text-[9px] md:text-[10px]">
             {footerContent.copyright}
           </p>
         </div>
         
         <div className="flex flex-col gap-3 md:items-center">
-          <a href={`mailto:${personalInfo.emails.primary}`} className="underline text-white/80 hover:text-violet-300 transition-colors underline-offset-4 decoration-1 lowercase">
+          <a href={`mailto:${personalInfo.emails.primary}`} className="underline text-white/80 hover:text-emerald-300 transition-colors underline-offset-4 decoration-1 lowercase">
             {personalInfo.emails.primary}
           </a>
           {/* Social Links */}
@@ -78,7 +84,7 @@ const Footer = () => {
               href={socialLinks.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white/60 hover:text-teal-400 transition-colors duration-300"
+              className="text-white/60 hover:text-emerald-400 transition-colors duration-300"
               aria-label="Instagram"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -104,4 +110,3 @@ const Footer = () => {
 };
 
 export default Footer;
-

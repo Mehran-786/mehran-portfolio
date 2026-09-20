@@ -20,6 +20,10 @@ const Hero = () => {
 
   const handleEnded = () => {
     setIsPlaying(false);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.load(); // This forces the poster to show again
+    }
   };
 
   const toggleVideo = (e) => {
