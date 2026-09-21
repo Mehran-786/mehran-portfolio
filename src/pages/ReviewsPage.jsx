@@ -90,14 +90,8 @@ export default function ReviewsPage() {
     }
   });
 
-  // Admin session state
-  const [isAdmin, setIsAdmin] = useState(() => {
-    try {
-      return localStorage.getItem('mr_is_admin') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  // Admin session state - derived exclusively from signed cookie via /api/auth/session-check
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Modals
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -127,15 +121,10 @@ export default function ReviewsPage() {
   // Pending action when auth required
   const [pendingAction, setPendingAction] = useState(null);
 
-  // Reviews Data
-  const [reviews, setReviews] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mr_reviews_data');
-      return saved ? JSON.parse(saved) : INITIAL_REVIEWS;
-    } catch {
-      return INITIAL_REVIEWS;
-    }
-  });
+  // Reviews Data - loaded from shared PostgreSQL database
+  const [reviews, setReviews] = useState([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
+  const [loadReviewsError, setLoadReviewsError] = useState(null);
 
   // Form state
   const [formRating, setFormRating] = useState(5);
@@ -170,12 +159,43 @@ export default function ReviewsPage() {
     } catch {}
   }, [theme]);
 
-  // Persist reviews
+  // Check admin session on mount
   useEffect(() => {
+    let mounted = true;
+    fetch('/api/auth/session-check')
+      .then(res => res.json())
+      .then(data => {
+        if (mounted && data && typeof data.isAdmin === 'boolean') {
+          setIsAdmin(data.isAdmin);
+        }
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  // Fetch reviews from Postgres DB
+  const fetchReviews = async () => {
+    setIsLoadingReviews(true);
+    setLoadReviewsError(null);
     try {
-      localStorage.setItem('mr_reviews_data', JSON.stringify(reviews));
-    } catch {}
-  }, [reviews]);
+      const res = await fetch('/api/reviews');
+      if (!res.ok) {
+        throw new Error(`Failed to load reviews (${res.status})`);
+      }
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : (data.reviews || []);
+      setReviews(list);
+    } catch (err) {
+      console.error('[Fetch Reviews Error]', err);
+      setLoadReviewsError(err.message || 'Failed to load reviews from server.');
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   // VisualViewport API listener for mobile keyboard shifts (F9)
   useEffect(() => {
@@ -302,9 +322,6 @@ export default function ReviewsPage() {
 
       if (res.ok && data.success) {
         setIsAdmin(true);
-        try {
-          localStorage.setItem('mr_is_admin', 'true');
-        } catch {}
         setShowAdminModal(false);
         setAdminStep(1);
         setSecretIdInput('');
@@ -351,11 +368,11 @@ export default function ReviewsPage() {
     }
   };
 
-  const handleAdminLogout = () => {
-    setIsAdmin(false);
+  const handleAdminLogout = async () => {
     try {
-      localStorage.removeItem('mr_is_admin');
+      await fetch('/api/auth/logout', { method: 'POST' });
     } catch {}
+    setIsAdmin(false);
   };
 
   // Direct R2 presigned file upload via XMLHttpRequest with real progress (D1-D4)
@@ -519,15 +536,12 @@ export default function ReviewsPage() {
     setIsSubmitting(true);
     const cleanBody = formBody.replace(/<[^>]*>?/gm, '').trim();
 
-    const newReview = {
-      id: "rev-" + Date.now(),
+    const payload = {
       name: isAdmin ? "Mehran Rasool" : (user?.name || "Anonymous Reviewer"),
       email: isAdmin ? "mehranrasool.sp24@gmail.com" : (user?.email || ""),
       rating: formRating,
       verdict: formVerdict,
       body: cleanBody,
-      createdAt: new Date().toISOString(),
-      approved: true,
       attachments: formAttachments.map(a => ({
         id: a.id,
         name: a.name,
@@ -537,27 +551,36 @@ export default function ReviewsPage() {
         url: a.key ? getR2Url(a.key) : a.url,
         poster: a.poster || DEFAULT_VIDEO_POSTER,
       })),
-      replies: [],
     };
 
-    setReviews(prev => [...prev, newReview]);
-    setIsSubmitting(false);
-    setSubmitSuccess(true);
-    setFormBody("");
-    setFormAttachments([]);
-    setFormErrors({});
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit review.');
+      }
 
-    // Send email notification to Admin asynchronously (B1)
-    fetch('/api/notify/new-review', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newReview),
-    }).catch(err => console.error('[Review Alert Failed]', err));
+      const newReview = data;
+      setReviews(prev => [...prev, newReview]);
+      setSubmitSuccess(true);
+      setFormBody("");
+      setFormAttachments([]);
+      setFormErrors({});
 
-    setTimeout(() => {
-      setSubmitSuccess(false);
-      threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 1000);
+      setTimeout(() => {
+        setSubmitSuccess(false);
+        threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 1000);
+    } catch (err) {
+      console.error('[Submit Review Error]', err);
+      setFormErrors(prev => ({ ...prev, body: err.message || 'Submission failed. Please try again.' }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Submit Reply Flow
@@ -571,36 +594,39 @@ export default function ReviewsPage() {
     }
 
     const cleanReply = replyText.replace(/<[^>]*>?/gm, '').trim();
-    const newReply = {
-      id: "rep-" + Date.now(),
+    const payload = {
       name: isAdmin ? "Mehran Rasool" : (currentUser?.name || "Community Member"),
       isOwner: isAdmin,
       body: cleanReply,
-      createdAt: new Date().toISOString(),
     };
 
-    const targetReview = reviews.find(r => r.id === reviewId);
-
-    setReviews(prev => prev.map(rev => {
-      if (rev.id === reviewId) {
-        return {
-          ...rev,
-          replies: [...(rev.replies || []), newReply],
-        };
-      }
-      return rev;
-    }));
-
-    setReplyText("");
-    setReplyTargetId(null);
-
-    // If Mehran replied, send minimal notification to reviewer email (B2)
-    if (isAdmin && targetReview?.email) {
-      fetch('/api/notify/new-reply', {
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewerEmail: targetReview.email }),
-      }).catch(err => console.error('[Reply Email Failed]', err));
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send reply.');
+      }
+
+      const createdReply = data;
+      setReviews(prev => prev.map(rev => {
+        if (rev.id === reviewId) {
+          return {
+            ...rev,
+            replies: [...(rev.replies || []), createdReply],
+          };
+        }
+        return rev;
+      }));
+
+      setReplyText("");
+      setReplyTargetId(null);
+    } catch (err) {
+      console.error('[Reply Submit Error]', err);
+      alert(err.message || 'Could not post reply. Please try again.');
     }
   };
 
@@ -631,24 +657,27 @@ export default function ReviewsPage() {
   };
 
   // Confirm Deletion
-  const confirmDeleteAction = () => {
+  const confirmDeleteAction = async () => {
     if (deleteModalState.type === 'review') {
-      // Delete from state
-      setReviews(prev => prev.filter(r => r.id !== deleteModalState.reviewId));
-      // Delete objects from Cloudflare R2 (D5)
-      if (deleteModalState.r2Keys.length > 0) {
-        fetch('/api/r2/delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ keys: deleteModalState.r2Keys }),
-        }).catch(err => console.error('[R2 Delete Failed]', err));
+      try {
+        const res = await fetch(`/api/reviews/${deleteModalState.reviewId}`, {
+          method: 'DELETE',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to delete review.');
+        }
+        setReviews(prev => prev.filter(r => r.id !== deleteModalState.reviewId));
+      } catch (err) {
+        console.error('[Delete Review Error]', err);
+        alert(err.message || 'Could not delete review.');
       }
     } else if (deleteModalState.type === 'reply') {
       setReviews(prev => prev.map(r => {
         if (r.id === deleteModalState.reviewId) {
           return {
             ...r,
-            replies: r.replies.filter(rep => rep.id !== deleteModalState.replyId),
+            replies: (r.replies || []).filter(rep => rep.id !== deleteModalState.replyId),
           };
         }
         return r;
@@ -885,7 +914,36 @@ export default function ReviewsPage() {
 
           {/* Chat Thread */}
           <section className="mr-chat-thread" aria-label="Review messages thread">
-            {filteredReviews.length === 0 ? (
+            {isLoadingReviews ? (
+              <div className="mr-skeleton-thread">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="mr-skeleton-card">
+                    <div className="mr-skeleton-header">
+                      <div className="mr-skeleton-avatar"></div>
+                      <div className="mr-skeleton-lines">
+                        <div className="mr-skeleton-line short"></div>
+                        <div className="mr-skeleton-line tiny"></div>
+                      </div>
+                    </div>
+                    <div className="mr-skeleton-body">
+                      <div className="mr-skeleton-line full"></div>
+                      <div className="mr-skeleton-line medium"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : loadReviewsError ? (
+              <div className="mr-error-thread">
+                <p className="text-red-400 font-semibold mb-2">⚠️ {loadReviewsError}</p>
+                <button
+                  type="button"
+                  onClick={fetchReviews}
+                  className="mr-submit-btn mr-touch-btn"
+                >
+                  🔄 Retry Loading Reviews
+                </button>
+              </div>
+            ) : filteredReviews.length === 0 ? (
               <div className="mr-empty-thread">
                 <p className="text-xl font-semibold mb-2">No reviews match your filters yet.</p>
                 <p className="text-sm opacity-75">Be the first to share your experience with Mehran's engineering work below!</p>
@@ -1181,9 +1239,21 @@ export default function ReviewsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || formAttachments.some(a => a.isUploading)}
-                  className="mr-submit-btn"
+                  className="mr-submit-btn flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? "Posting..." : submitSuccess ? "✓ Posted!" : "Post Feedback"}
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-emerald-300 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                      <span>Posting...</span>
+                    </>
+                  ) : submitSuccess ? (
+                    "✓ Posted!"
+                  ) : (
+                    "Post Feedback"
+                  )}
                 </button>
               </div>
             </form>
@@ -2353,5 +2423,59 @@ const reviewsCss = `
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Skeleton Loading & Error Banner */
+.mr-skeleton-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.mr-skeleton-card {
+  background: var(--rev-bubble-bg);
+  border: 1px solid var(--rev-bubble-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  backdrop-filter: var(--rev-blur);
+}
+.mr-skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.mr-skeleton-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.2);
+  animation: mr-pulse 1.8s ease-in-out infinite;
+}
+.mr-skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+.mr-skeleton-line {
+  height: 0.75rem;
+  border-radius: 0.25rem;
+  background: rgba(16, 185, 129, 0.15);
+  animation: mr-pulse 1.8s ease-in-out infinite;
+}
+.mr-skeleton-line.short { width: 35%; }
+.mr-skeleton-line.tiny { width: 20%; }
+.mr-skeleton-line.full { width: 95%; margin-bottom: 0.5rem; }
+.mr-skeleton-line.medium { width: 70%; }
+@keyframes mr-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.8; }
+}
+.mr-error-thread {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 1rem;
 }
 `;

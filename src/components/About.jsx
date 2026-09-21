@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import stackImage from '../assets/about/mehran-avatar.jpeg';
 import { aboutContent } from '../data/portfolioData';
 
@@ -56,7 +56,7 @@ const CppIcon = () => (
 
 const About = () => {
   return (
-    <section id="about" className="bg-gradient-to-b from-[#050f09] via-[#071a0f] to-[#030c06] pt-24 pb-36 px-6 md:px-12 w-full relative overflow-hidden font-sans">
+    <section id="about" className="bg-gradient-to-b from-[#050f09] via-[#071a0f] to-[#030c06] pt-28 md:pt-32 pb-36 px-6 md:px-12 w-full relative overflow-hidden font-sans">
       
       {/* Ambient glowing orbs */}
       <div className="absolute top-1/3 -left-32 w-96 h-96 bg-emerald-600/15 rounded-full blur-[140px] pointer-events-none" />
@@ -64,14 +64,14 @@ const About = () => {
 
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-16 items-center md:items-start relative z-10">
         
-        {/* Left Side: ID Badge */}
-        <div className="flex flex-col items-center w-full md:w-[360px] shrink-0 mt-8 md:mt-0">
+        {/* Left Side: ID Badge with dedicated clearance on mobile */}
+        <div className="flex flex-col items-center w-full md:w-[360px] shrink-0 mt-16 md:mt-0">
           
           <div data-aos="drop-bounce" className="relative flex justify-center w-full">
-            {/* Lanyard string */}
-            <div className="absolute -top-32 left-1/2 w-3 h-40 bg-gradient-to-b from-black via-emerald-950 to-black transform -translate-x-1/2 shadow-inner z-0 border-x border-emerald-500/20"></div>
+            {/* Lanyard string - scaled responsively so it never clips or disconnects on mobile */}
+            <div className="absolute -top-20 md:-top-32 left-1/2 w-2.5 md:w-3 h-24 md:h-40 bg-gradient-to-b from-black via-emerald-950 to-black transform -translate-x-1/2 shadow-inner z-0 border-x border-emerald-500/20"></div>
             {/* Lanyard clip */}
-            <div className="absolute -top-6 left-1/2 w-6 h-12 bg-gradient-to-b from-gray-300 to-gray-500 rounded border border-gray-400 transform -translate-x-1/2 z-10 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
+            <div className="absolute -top-5 md:-top-6 left-1/2 w-5 md:w-6 h-10 md:h-12 bg-gradient-to-b from-gray-300 to-gray-500 rounded border border-gray-400 transform -translate-x-1/2 z-10 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
             
             {/* Badge Card */}
             <div className="bg-[#061a10]/90 border border-emerald-500/30 w-full max-w-[290px] rounded-3xl p-4 shadow-[0_25px_60px_rgba(0,0,0,0.7)] relative z-20 transform -rotate-3 hover:rotate-0 transition-transform duration-500 backdrop-blur-xl group">
@@ -83,7 +83,7 @@ const About = () => {
               <div className="w-full aspect-square overflow-hidden rounded-2xl bg-black/60 border border-emerald-500/40 relative shadow-inner">
                 <img 
                   src={stackImage} 
-                  alt="Mehran Rasool â€” Full-Stack AI Engineer" 
+                  alt="Mehran Rasool — Full-Stack AI Engineer" 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>

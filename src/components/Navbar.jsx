@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { personalInfo } from '../data/portfolioData';
 import brandLogo from '../assets/logo.jpeg';
 
@@ -7,6 +7,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +20,29 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleSkillsClick = (e) => {
+    e.preventDefault();
+    if (isOpen) setIsOpen(false);
+
+    const scroll = () => {
+      const skillsEl = document.getElementById('skills');
+      if (skillsEl) {
+        skillsEl.scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            ? 'auto'
+            : 'smooth',
+        });
+      }
+    };
+
+    if (location.pathname === '/') {
+      scroll();
+    } else {
+      navigate('/');
+      setTimeout(scroll, 120); // wait for HomePage to mount
+    }
+  };
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -63,14 +87,14 @@ const Navbar = () => {
         {/* Center: Desktop Menu Links */}
         <div className="hidden md:flex space-x-7">
           {navLinks.map((link) => {
-            const isAnchor = link.path.includes('#');
             const isActive = location.pathname === link.path;
 
-            if (isAnchor) {
+            if (link.name === 'Skills') {
               return (
                 <a 
                   key={link.name} 
                   href={link.path}
+                  onClick={handleSkillsClick}
                   className="text-white/80 hover:text-white font-medium relative group transition-colors duration-300 text-sm tracking-wide"
                 >
                   {link.name}
@@ -133,13 +157,12 @@ const Navbar = () => {
       >
         <div className="flex flex-col px-6 space-y-2">
           {navLinks.map((link) => {
-            const isAnchor = link.path.includes('#');
-            if (isAnchor) {
+            if (link.name === 'Skills') {
               return (
                 <a 
                   key={link.name} 
                   href={link.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleSkillsClick}
                   className="text-white/80 hover:text-emerald-400 font-semibold text-lg py-2 border-b border-white/5 transition-colors min-h-[44px] flex items-center"
                 >
                   {link.name}

@@ -44,8 +44,40 @@ function apiDevMiddleware() {
 
         if (!req.url?.startsWith('/api/')) return next();
 
-        const urlPath = req.url.split('?')[0].replace(/^\/api\//, '');
-        const filePath = `./api/${urlPath}.js`;
+        const cleanUrl = req.url.split('?')[0].replace(/^\/api\//, '');
+        let filePath = `./api/${cleanUrl}.js`;
+        let queryParams = {};
+
+        // Parse query string if present
+        if (req.url.includes('?')) {
+          const qs = req.url.split('?')[1];
+          const sp = new URLSearchParams(qs);
+          for (const [k, v] of sp.entries()) {
+            queryParams[k] = v;
+          }
+        }
+
+        // Match dynamic routes for local dev:
+        // /api/reviews/:id/reply -> ./api/reviews/[id]/reply.js
+        const replyMatch = cleanUrl.match(/^reviews\/([^/]+)\/reply$/);
+        if (replyMatch) {
+          filePath = './api/reviews/[id]/reply.js';
+          queryParams.id = replyMatch[1];
+        }
+
+        // /api/reviews/:id -> ./api/reviews/[id]/index.js
+        const reviewItemMatch = cleanUrl.match(/^reviews\/([^/]+)$/);
+        if (reviewItemMatch) {
+          filePath = './api/reviews/[id]/index.js';
+          queryParams.id = reviewItemMatch[1];
+        }
+
+        // /api/reviews -> ./api/reviews/index.js
+        if (cleanUrl === 'reviews') {
+          filePath = './api/reviews/index.js';
+        }
+
+        req.query = { ...queryParams, ...(req.query || {}) };
 
         let rawBody = '';
         req.on('data', chunk => { rawBody += chunk; });
@@ -60,7 +92,7 @@ function apiDevMiddleware() {
               return handler(req, res);
             }
           } catch (err) {
-            console.error(`[Local API Error on ${req.url}]:`, err?.message || err);
+            console.error(`[Local API Error on ${req.url} -> ${filePath}]:`, err?.message || err);
           }
           next();
         });

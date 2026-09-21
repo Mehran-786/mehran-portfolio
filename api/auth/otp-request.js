@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { getNotifyTransporter, sendEmailWithRetry, checkRateLimit, otpStore, timingSafeCompare } from '../_lib/utils.js';
+import { getNotifyTransporter, sendEmailWithRetry, checkRateLimit, timingSafeCompare } from '../_lib/utils.js';
+import { sql, initDb } from '../_lib/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,21 +23,25 @@ export default async function handler(req, res) {
     // Verify secret ID timing-safely
     const isValid = timingSafeCompare(secretId || '', expectedSecretId);
     if (!isValid) {
-      // Return generic error without revealing whether ID was wrong
       return res.status(401).json({ error: 'Invalid authentication request.' });
     }
+
+    // Ensure database tables exist
+    await initDb();
 
     // Generate cryptographically secure 6-digit numeric OTP
     const otp = crypto.randomInt(100000, 1000000).toString();
     const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    // Store hash with 5-minute expiry and 0 attempts
-    otpStore.set('admin_otp', {
-      hash: otpHash,
-      expiresAt: Date.now() + 5 * 60 * 1000,
-      attempts: 0,
-      ip,
-    });
+    // DELETE any existing rows first (single active code at a time)
+    await sql`DELETE FROM otp_codes;`;
+
+    // INSERT new hash, expiry (now + 5 min), attempts=0, and IP
+    await sql`
+      INSERT INTO otp_codes (code_hash, expires_at, attempts, requesting_ip)
+      VALUES (${otpHash}, ${expiresAt}, 0, ${ip});
+    `;
 
     const adminEmail = process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
     const transporter = getNotifyTransporter();
@@ -65,7 +70,7 @@ export default async function handler(req, res) {
       `,
     };
 
-    // Send email with exponential backoff (G3)
+    // Send email with exponential backoff retry
     await sendEmailWithRetry(transporter, mailOptions);
 
     return res.status(200).json({ success: true, message: 'Verification code sent to admin email.' });

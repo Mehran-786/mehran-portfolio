@@ -2,8 +2,7 @@ import { S3Client } from '@aws-sdk/client-s3';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
-// In-memory stores for serverless lifecycle (persists across warm invocations)
-export const otpStore = global.__OTP_STORE__ || (global.__OTP_STORE__ = new Map());
+// Rate limiter store for serverless lifecycle (persists across warm invocations)
 export const rateLimitStore = global.__RATE_LIMIT_STORE__ || (global.__RATE_LIMIT_STORE__ = new Map());
 
 /**
@@ -104,4 +103,39 @@ export function timingSafeCompare(a, b) {
   const bufB = Buffer.from(b);
   if (bufA.length !== bufB.length) return false;
   return crypto.timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Verify admin session from cookies or Authorization header
+ * @param {import('http').IncomingMessage} req
+ * @returns {boolean}
+ */
+export function verifyAdminSession(req) {
+  try {
+    const cookieHeader = req.headers?.cookie || '';
+    let sessionToken = '';
+
+    const match = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
+    if (match) {
+      sessionToken = decodeURIComponent(match[1]);
+    } else if (req.headers?.authorization?.startsWith('Bearer ')) {
+      sessionToken = req.headers.authorization.slice(7).trim();
+    }
+
+    if (!sessionToken || !sessionToken.includes('.')) return false;
+
+    const [payloadB64, sig] = sessionToken.split('.');
+    const sessionSecret = process.env.SESSION_SECRET || 'mehran_secure_session_secret_default_key_2026';
+    const expectedSig = crypto.createHmac('sha256', sessionSecret).update(payloadB64).digest('hex');
+
+    if (!timingSafeCompare(sig, expectedSig)) return false;
+
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString('utf-8'));
+    if (payload.role !== 'admin') return false;
+    if (payload.exp && Date.now() > payload.exp) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
 }

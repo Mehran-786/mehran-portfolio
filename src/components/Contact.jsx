@@ -73,7 +73,7 @@ const Contact = () => {
   };
 
   return (
-    <section ref={ref} id="contact" className="bg-[#050f09] w-full min-h-screen relative overflow-hidden flex items-end pt-32 pb-0 border-t border-emerald-950/40">
+    <section ref={ref} id="contact" className="bg-[#050f09] w-full min-h-dvh relative overflow-hidden flex items-end pt-32 pb-0 border-t border-emerald-950/40">
       {/* Huge Background Parallax Text */}
       <motion.div 
         style={{ y }}
