@@ -29,19 +29,6 @@ function apiDevMiddleware() {
           };
         }
 
-        if (req.url === '/sitemap.xml') {
-          const mod = await server.ssrLoadModule('./api/sitemap.js');
-          return mod.default(req, res);
-        }
-        if (req.url === '/robots.txt') {
-          const mod = await server.ssrLoadModule('./api/robots.js');
-          return mod.default(req, res);
-        }
-        if (req.url === '/llms.txt') {
-          const mod = await server.ssrLoadModule('./api/llms.js');
-          return mod.default(req, res);
-        }
-
         if (!req.url?.startsWith('/api/')) return next();
 
         const cleanUrl = req.url.split('?')[0].replace(/^\/api\//, '');
@@ -58,6 +45,20 @@ function apiDevMiddleware() {
         }
 
         // Match dynamic routes for local dev:
+        // /api/auth/:action -> ./api/auth/[action].js
+        const authMatch = cleanUrl.match(/^auth\/([^/]+)$/);
+        if (authMatch) {
+          filePath = './api/auth/[action].js';
+          queryParams.action = authMatch[1];
+        }
+
+        // /api/r2/:action -> ./api/r2/[action].js
+        const r2Match = cleanUrl.match(/^r2\/([^/]+)$/);
+        if (r2Match) {
+          filePath = './api/r2/[action].js';
+          queryParams.action = r2Match[1];
+        }
+
         // /api/reviews/:id/reply -> ./api/reviews/[id]/reply.js
         const replyMatch = cleanUrl.match(/^reviews\/([^/]+)\/reply$/);
         if (replyMatch) {

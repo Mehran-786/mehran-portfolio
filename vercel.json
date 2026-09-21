@@ -3,18 +3,6 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/api/robots"
-    },
-    {
-      "source": "/llms.txt",
-      "destination": "/api/llms"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

@@ -1,12 +1,10 @@
-export default function handler(req, res) {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehran-nine.vercel.app').replace(/\/+$/, '');
-  const content = `# Mehran Rasool — Portfolio Summary for AI Crawlers
+# Mehran Rasool — Portfolio Summary for AI Crawlers
 
 ## Identity and Overview
 Mehran Rasool is a full-stack web and mobile application developer and applied AI engineer based in Wah Cantt, Punjab, Pakistan.
 Mehran Rasool is currently pursuing a Bachelor of Science in Computer Science at COMSATS University Islamabad, Wah Campus.
 Mehran Rasool specializes in production web application development, cross-platform mobile app development with Flutter, REST API engineering, and large language model security systems.
-The official website of Mehran Rasool is ${siteUrl}.
+The official website of Mehran Rasool is https://mehran-nine.vercel.app.
 
 ## Core Technical Skills
 - Frontend Technologies: React, Next.js, Vite, JavaScript (ES6+), HTML5, CSS3, Tailwind CSS.
@@ -28,16 +26,10 @@ Mehran Rasool accepts freelance and contract work in web application development
 Clients can contact Mehran Rasool via email at mehranrasool.sp24@gmail.com.
 
 ## Verified Links and Online Profiles
-- Official Website: ${siteUrl}
-- Dedicated About Route: ${siteUrl}/about
-- Projects Showcase: ${siteUrl}/projects
-- Client Reviews and Community Feedback: ${siteUrl}/reviews
-- Contact Page: ${siteUrl}/contact
+- Official Website: https://mehran-nine.vercel.app
+- Dedicated About Route: https://mehran-nine.vercel.app/about
+- Projects Showcase: https://mehran-nine.vercel.app/projects
+- Client Reviews and Community Feedback: https://mehran-nine.vercel.app/reviews
+- Contact Page: https://mehran-nine.vercel.app/contact
 - GitHub: https://github.com/Mehran-786
 - LinkedIn: https://www.linkedin.com/in/mehran-rasool-445613402
-`;
-
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
-  res.status(200).send(content);
-}

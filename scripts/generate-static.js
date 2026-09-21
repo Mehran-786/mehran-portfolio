@@ -121,4 +121,11 @@ fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemap, 'utf-8');
 fs.writeFileSync(path.join(distDir, 'robots.txt'), robots, 'utf-8');
 fs.writeFileSync(path.join(distDir, 'llms.txt'), llms, 'utf-8');
 
+const publicDir = path.resolve(__dirname, '../public');
+if (fs.existsSync(publicDir)) {
+  fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemap, 'utf-8');
+  fs.writeFileSync(path.join(publicDir, 'robots.txt'), robots, 'utf-8');
+  fs.writeFileSync(path.join(publicDir, 'llms.txt'), llms, 'utf-8');
+}
+
 console.log('Successfully generated static SEO files with dynamic siteUrl:', siteUrl);
