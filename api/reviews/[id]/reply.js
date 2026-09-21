@@ -59,10 +59,11 @@ export default async function handler(req, res) {
     if (effectiveIsOwner && parentReview.email && parentReview.email.includes('@')) {
       const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehran-nine.vercel.app').replace(/\/+$/, '');
       const reviewsUrl = `${siteUrl}/reviews`;
+      const senderEmail = process.env.GMAIL_REPLY_USER || 'mehranrasool.sp24@gmail.com';
       const transporter = getReplyTransporter();
 
       const mailOptions = {
-        from: `"Mehran Rasool" <${process.env.GMAIL_REPLY_USER}>`,
+        from: `"Mehran Rasool" <${senderEmail}>`,
         to: parentReview.email,
         subject: 'Mehran replied to your review',
         text: `Mehran Rasool has replied to the review you left on his portfolio site.\n\nYou can read the reply on the reviews page:\n${reviewsUrl}\n`,
@@ -81,7 +82,14 @@ export default async function handler(req, res) {
         `,
       };
 
-      sendEmailWithRetry(transporter, mailOptions).catch(err => console.error('[Reply Notification Error]', err));
+      try {
+        const mailResult = await sendEmailWithRetry(transporter, mailOptions);
+        if (!mailResult.success) {
+          console.warn('[Reply Email Warning]', mailResult.error);
+        }
+      } catch (err) {
+        console.error('[Reply Notification Error]', err?.message || err);
+      }
     }
 
     return res.status(201).json(createdReply);

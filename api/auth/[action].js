@@ -61,10 +61,11 @@ async function handleOtpRequest(req, res) {
     `;
 
     const adminEmail = process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
+    const senderEmail = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || 'mehranrasool546@gmail.com';
     const transporter = getNotifyTransporter();
 
     const mailOptions = {
-      from: `"Mehran Portfolio Security" <${process.env.GMAIL_NOTIFY_USER}>`,
+      from: `"Mehran Portfolio Security" <${senderEmail}>`,
       to: adminEmail,
       subject: 'Your login code',
       text: `Your single-use login code is: ${otp}\n\nThis code expires in 5 minutes.\nRequesting IP: ${ip}\n\nIf you did not request this login code, someone may have your secret ID. Please review your credentials immediately.`,
@@ -83,9 +84,13 @@ async function handleOtpRequest(req, res) {
       `,
     };
 
-    sendEmailWithRetry(transporter, mailOptions).catch(err => {
-      console.error('[Admin Alert Failed]', err?.message || err);
-    });
+    const mailResult = await sendEmailWithRetry(transporter, mailOptions);
+    if (!mailResult.success) {
+      console.error('[OTP Email Error]', mailResult.error);
+      return res.status(500).json({ 
+        error: `Could not send verification email: ${mailResult.error}. Please check your Gmail App Password in Vercel settings.` 
+      });
+    }
 
     return res.status(200).json({ success: true, message: 'Verification code sent.' });
   } catch (error) {

@@ -48,26 +48,30 @@ export function getR2Client() {
  * Gmail Transporters
  */
 export function getNotifyTransporter() {
+  const user = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
+  const rawPass = process.env.GMAIL_NOTIFY_APP_PASSWORD || process.env.GMAIL_NOTIFY_PASSWORD || process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASSWORD || '';
+  const pass = rawPass.replace(/\s+/g, '');
+
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.GMAIL_NOTIFY_USER || '',
-      pass: process.env.GMAIL_NOTIFY_APP_PASSWORD || '',
-    },
+    service: 'gmail',
+    auth: { user, pass },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 
 export function getReplyTransporter() {
+  const user = process.env.GMAIL_REPLY_USER || 'mehranrasool.sp24@gmail.com';
+  const rawPass = process.env.GMAIL_REPLY_APP_PASSWORD || process.env.GMAIL_REPLY_PASSWORD || process.env.GMAIL_APP_PASSWORD || '';
+  const pass = rawPass.replace(/\s+/g, '');
+
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.GMAIL_REPLY_USER || '',
-      pass: process.env.GMAIL_REPLY_APP_PASSWORD || '',
-    },
+    service: 'gmail',
+    auth: { user, pass },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 
@@ -86,7 +90,7 @@ export async function sendEmailWithRetry(transporter, mailOptions, retries = 2) 
       attempt += 1;
       if (attempt > retries) {
         console.error(`[Email Error] Failed after ${retries} retries:`, error?.message || error);
-        return { success: false, error: error?.message };
+        return { success: false, error: error?.message || 'Email delivery failed' };
       }
       const delayMs = delays[attempt - 1] || 2000;
       await new Promise(resolve => setTimeout(resolve, delayMs));

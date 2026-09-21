@@ -204,9 +204,10 @@ export default async function handler(req, res) {
           </ul>`
         : '<p style="color: #94a3b8; margin: 4px 0;">None</p>';
 
+      const senderEmail = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || 'mehranrasool546@gmail.com';
       const transporter = getNotifyTransporter();
       const mailOptions = {
-        from: `"Portfolio Reviews Alert" <${process.env.GMAIL_NOTIFY_USER}>`,
+        from: `"Portfolio Reviews Alert" <${senderEmail}>`,
         to: adminEmail,
         subject: `New review from ${cleanName} — ${numRating} stars`,
         text: `New review submitted on your portfolio!\n\n` +
@@ -246,7 +247,14 @@ export default async function handler(req, res) {
         `,
       };
 
-      sendEmailWithRetry(transporter, mailOptions).catch(err => console.error('[Review Email Error]', err));
+      try {
+        const mailResult = await sendEmailWithRetry(transporter, mailOptions);
+        if (!mailResult.success) {
+          console.warn('[Review Alert Email Warning]', mailResult.error);
+        }
+      } catch (err) {
+        console.error('[Review Email Error]', err?.message || err);
+      }
 
       return res.status(201).json(createdReview);
     } catch (error) {
