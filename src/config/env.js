@@ -2,21 +2,21 @@
  * Centralized Environment & URL Configuration
  * 
  * Never hardcode domains or R2 endpoints in application code.
- * Live site URL is driven by NEXT_PUBLIC_SITE_URL (default: https://mehran-nine.vercel.app).
+ * Live site URL is driven by NEXT_PUBLIC_SITE_URL (default: https://mehranrasool.me).
  * File storage URL is driven by R2_PUBLIC_URL.
  */
 
 // Determine base site URL from environment variables
 export const SITE_URL = (
   (typeof import.meta !== 'undefined' && (import.meta.env?.NEXT_PUBLIC_SITE_URL || import.meta.env?.VITE_SITE_URL)) ||
-  (typeof process !== 'undefined' && (process.env?.NEXT_PUBLIC_SITE_URL || process.env?.SITE_URL)) ||
-  'https://mehran-nine.vercel.app'
+  (typeof globalThis !== 'undefined' && (globalThis.process?.env?.NEXT_PUBLIC_SITE_URL || globalThis.process?.env?.SITE_URL)) ||
+  'https://mehranrasool.me'
 ).replace(/\/+$/, '');
 
-// Determine R2 public CDN URL from environment variables
+// Determine R2 public CDN URL from environment variables (using public prefixes only)
 export const R2_PUBLIC_URL = (
-  (typeof import.meta !== 'undefined' && (import.meta.env?.R2_PUBLIC_URL || import.meta.env?.VITE_R2_PUBLIC_URL)) ||
-  (typeof process !== 'undefined' && process.env?.R2_PUBLIC_URL) ||
+  (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_R2_PUBLIC_URL || import.meta.env?.NEXT_PUBLIC_R2_PUBLIC_URL)) ||
+  (typeof globalThis !== 'undefined' && (globalThis.process?.env?.VITE_R2_PUBLIC_URL || globalThis.process?.env?.NEXT_PUBLIC_R2_PUBLIC_URL || globalThis.process?.env?.R2_PUBLIC_URL)) ||
   ''
 ).replace(/\/+$/, '');
 

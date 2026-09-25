@@ -1,35 +1,56 @@
-# Mehran Rasool — Portfolio Summary for AI Crawlers
+# Mehran Rasool — Portfolio Summary for AI & LLM Crawlers
+# Generated: 2026-09-25 | Canonical Domain: https://mehranrasool.me
 
-## Identity and Overview
-Mehran Rasool is a full-stack web and mobile application developer and applied AI engineer based in Wah Cantt, Punjab, Pakistan.
-Mehran Rasool is currently pursuing a Bachelor of Science in Computer Science at COMSATS University Islamabad, Wah Campus.
-Mehran Rasool specializes in production web application development, cross-platform mobile app development with Flutter, REST API engineering, and large language model security systems.
-The official website of Mehran Rasool is https://mehran-nine.vercel.app.
+## Identity & Professional Overview
+- Name: Mehran Rasool
+- Primary Professional Identity: Full-Stack Developer
+- Secondary Specializations: Full-Stack Web Development, Flutter App Engineering, Applied AI Systems, REST API Architecture, LLM Security
+- Location: Wah Cantt, Punjab, Pakistan
+- Education: Bachelor of Science in Computer Science at COMSATS University Islamabad, Wah Campus
+- Official Website: https://mehranrasool.me
 
-## Core Technical Skills
-- Frontend Technologies: React, Next.js, Vite, JavaScript (ES6+), HTML5, CSS3, Tailwind CSS.
-- Mobile Development: Flutter, Dart, cross-platform iOS and Android application engineering.
-- Backend Technologies: Python, FastAPI, Flask, Pydantic, RESTful API design, Gunicorn, Nginx.
-- Systems and Languages: C++, Java, Python, Dart, JavaScript, SQL.
-- AI and Machine Learning: Large Language Models (LLMs), Prompt Injection Defense, Microsoft Presidio, scikit-learn, TF-IDF, Logistic Regression, Groq API.
-- Deployment and Infrastructure: Linux server management, Vercel, Cloudflare edge caching, Git, GitHub.
+## Technical Capabilities
+- Web Development: React, Next.js, JavaScript (ES6+), HTML5, CSS3, Tailwind CSS, Vite
+- Mobile Development: Flutter, Dart, Cross-platform iOS & Android mobile application development
+- Backend & APIs: Python, FastAPI, Flask, Pydantic, RESTful API design, Gunicorn, Nginx
+- Systems & Core Languages: Python, Dart, JavaScript, C++, Java, SQL
+- AI & LLM Security: Prompt Injection Defense, Microsoft Presidio, scikit-learn, TF-IDF, Logistic Regression, Groq API
+- Deployment & Infrastructure: Linux Server Administration, Vercel, Cloudflare edge caching, Git, GitHub
 
-## Production Projects and Verified Metrics
-1. Video Downloader (DownSocial): A live production web application and media extraction service powered by a Flask backend deployed on Linux behind Nginx and Gunicorn with Cloudflare edge caching, IP-based rate limiting, and multilingual support.
-2. YT VISION: An enterprise YouTube analytics platform and browser extension powered by a multi-engine FastAPI backend (SEO Engine, Engagement Engine) following SOLID principles and shared Pydantic data contracts across an eight-stage processing pipeline with a React/Vite dashboard.
-3. Secure LLM Gateway: A five-stage hybrid security pipeline defending LLM applications against prompt injection, jailbreak attacks, and PII leakage across multiple languages. It incorporates deep-translator multilingual normalization, a TF-IDF + Logistic Regression attack classifier, and Microsoft Presidio with three custom recognizers (Pakistani CNIC, API keys, and personal names), backed by Groq llama-3.1-8b-instant. On a benchmark evaluation of 150 prompts, the gateway achieved 82.7% overall accuracy, 100% PII-masking recall, 100% block precision, and an average response latency of 525 milliseconds.
-4. 2D Dungeon Crawler RPG: A multi-file object-oriented 2D game engine built from scratch in C++ with SFML rendering, featuring data structures and algorithms, state machine boss battles, item inventory mechanics, particle systems, and in-game shop systems.
-5. Real Estate Management System: A full-featured desktop application built with Java applying object-oriented design patterns, persistent data storage, and property management workflows.
+## Verified Software Projects & Architecture
+1. Secure LLM Gateway
+   - Description: A five-stage hybrid security gateway for LLM applications defending against direct prompt injection, jailbreaking, and sensitive PII leakage across multiple languages.
+   - Stack: Python, FastAPI, scikit-learn, Microsoft Presidio, Groq API (llama-3.1-8b-instant), Docker, Nginx, Pydantic
+   - Benchmark Evaluation (150-prompt test suite): 82.7% overall accuracy, 100% PII recall, 100% block precision, 525ms average latency
+   - Repository: https://github.com/Mehran-786
 
-## Freelance and Contract Services
-Mehran Rasool accepts freelance and contract work in web application development, Flutter mobile application development, REST API engineering, and AI system integration.
-Clients can contact Mehran Rasool via email at mehranrasool.sp24@gmail.com.
+2. YT VISION (YouTube Analytics Platform & Extension)
+   - Description: Multi-engine YouTube analytics platform and browser extension built on SOLID principles with shared Pydantic data contracts across an eight-stage pipeline.
+   - Stack: Python, FastAPI, React, Vite, Pydantic, TOPSIS Utility Scoring, YouTube Data API
+   - Repository: https://github.com/Mehran-786
 
-## Verified Links and Online Profiles
-- Official Website: https://mehran-nine.vercel.app
-- Dedicated About Route: https://mehran-nine.vercel.app/about
-- Projects Showcase: https://mehran-nine.vercel.app/projects
-- Client Reviews and Community Feedback: https://mehran-nine.vercel.app/reviews
-- Contact Page: https://mehran-nine.vercel.app/contact
+3. DownSocial (Universal Video & Media Downloader)
+   - Description: High-speed universal video and media extraction production web utility supporting multi-platform extraction with IP rate limiting and Cloudflare edge caching.
+   - Stack: React, JavaScript, Python, Flask, Cloudflare CDN, Vercel
+   - Repository: https://github.com/Mehran-786
+   - Live URL: https://mehranrasool.me/projects#tool-website
+
+4. Cryptographic IDPS & Online Brute-Force Defense
+   - Description: Information security platform demonstrating offline cryptographic hash analysis and real-time online brute-force intrusion detection with automated account lockout.
+   - Stack: Python, Cryptography, IDPS, Hash Salting, Rate Limiting
+   - Repository: https://github.com/Mehran-786
+
+5. 2D Dungeon Crawler RPG Game (DSA Engine)
+   - Description: An object-oriented 2D dungeon crawler built from scratch in C++ featuring SFML rendering, particle systems, dynamic inventory, and boss battle state machines.
+   - Stack: C++, SFML, Data Structures & Algorithms, OOP
+   - Repository: https://github.com/Mehran-786
+
+## Contact & Public Verification
+- Official Website: https://mehranrasool.me
+- About Page: https://mehranrasool.me/about
+- Projects Showcase: https://mehranrasool.me/projects
+- Client Reviews: https://mehranrasool.me/reviews
+- Contact Page: https://mehranrasool.me/contact
 - GitHub: https://github.com/Mehran-786
 - LinkedIn: https://www.linkedin.com/in/mehran-rasool-445613402
+- Email: mehranrasool.sp24@gmail.com

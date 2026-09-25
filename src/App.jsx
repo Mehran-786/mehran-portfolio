@@ -5,6 +5,8 @@ import AboutPage from './pages/AboutPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ReviewsPage from './pages/ReviewsPage';
 import ContactPage from './pages/ContactPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Scroll to top or anchor on route change
 function ScrollManager() {
@@ -32,9 +34,10 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:slug" element={<ProjectDetailPage />} />
         <Route path="/reviews" element={<ReviewsPage />} />
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="*" element={<HomePage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

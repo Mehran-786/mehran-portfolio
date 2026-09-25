@@ -20,7 +20,6 @@ const getProjectsSchemas = () => {
       "author": { "@id": personId },
       "programmingLanguage": ["Python", "FastAPI"],
       "codeRepository": "https://github.com/Mehran-786",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "datePublished": "2024-02-10",
       "dateModified": "2026-09-20"
     },
@@ -35,7 +34,6 @@ const getProjectsSchemas = () => {
       "programmingLanguage": ["Python", "Flask", "JavaScript", "React"],
       "codeRepository": "https://github.com/Mehran-786",
       "url": `${siteUrl}/projects#tool-website`,
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "datePublished": "2023-11-20",
       "dateModified": "2026-09-20"
     },
@@ -49,7 +47,6 @@ const getProjectsSchemas = () => {
       "author": { "@id": personId },
       "programmingLanguage": ["Python", "FastAPI", "React", "TypeScript"],
       "codeRepository": "https://github.com/Mehran-786",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "datePublished": "2024-05-15",
       "dateModified": "2026-09-20"
     },
@@ -63,22 +60,20 @@ const getProjectsSchemas = () => {
       "author": { "@id": personId },
       "programmingLanguage": ["C++"],
       "codeRepository": "https://github.com/Mehran-786",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "datePublished": "2023-08-10",
       "dateModified": "2026-09-20"
     },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "Real Estate Management System",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Desktop, Cross-platform",
-      "description": "Java object-oriented desktop application implementing property database tracking, user authentication, transaction records, and administrative reporting.",
+      "name": "Cryptographic IDPS & Online Brute-Force Defense",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "Linux, Cloud, Cross-platform",
+      "description": "Information security platform demonstrating offline cryptographic hash analysis and real-time online brute-force intrusion detection with automated account lockout.",
       "author": { "@id": personId },
-      "programmingLanguage": ["Java"],
+      "programmingLanguage": ["Python", "Cryptography"],
       "codeRepository": "https://github.com/Mehran-786",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-      "datePublished": "2023-05-12",
+      "datePublished": "2024-03-10",
       "dateModified": "2026-09-20"
     }
   ];
@@ -142,8 +137,8 @@ export default function ProjectsPage() {
   return (
     <>
       <SEO
-        title="Projects — Web Apps, Flutter & AI Systems | Mehran Rasool"
-        description="Explore production projects by Mehran Rasool: Secure LLM Gateway, DownSocial Video Downloader, YT VISION Analytics Platform, and high-performance C++ games."
+        title="Projects — Mehran Rasool"
+        description="Explore software projects built by Mehran Rasool, including full-stack web applications, cross-platform Flutter apps, REST APIs, and applied AI systems."
         canonical={getSiteUrl('/projects')}
         jsonLd={schemas}
       />
@@ -152,7 +147,7 @@ export default function ProjectsPage() {
         <header className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-8 pb-4">
           <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">Portfolio Showcase</p>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
-            Featured Engineering Projects
+            Projects — Mehran Rasool
           </h1>
 
           <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-slate-400 mt-3 pt-2 border-b border-emerald-500/10 pb-3">

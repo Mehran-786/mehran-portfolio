@@ -1,8 +1,14 @@
 import crypto from 'crypto';
-import { getNotifyTransporter, sendEmailWithRetry, checkRateLimit, timingSafeCompare, verifyAdminSession } from '../_lib/utils.js';
+import { getNotifyTransporter, sendEmailWithRetry, checkRateLimit, timingSafeCompare, verifyAdminSession, validateOrigin } from '../_lib/utils.js';
 import { sql, initDb } from '../_lib/db.js';
 
 export default async function handler(req, res) {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    if (!validateOrigin(req)) {
+      return res.status(403).json({ error: 'Forbidden: Request origin not allowed.' });
+    }
+  }
+
   const action = req.query?.action || req.url?.split('/')?.filter(Boolean)?.pop()?.split('?')?.[0];
 
   if (action === 'otp-request') {
@@ -13,6 +19,9 @@ export default async function handler(req, res) {
   }
   if (action === 'session-check') {
     return handleSessionCheck(req, res);
+  }
+  if (action === 'change-secret') {
+    return handleChangeSecret(req, res);
   }
   if (action === 'logout') {
     return handleLogout(req, res);
@@ -37,16 +46,27 @@ async function handleOtpRequest(req, res) {
 
   try {
     const { secretId } = req.body || {};
-    const expectedSecretId = process.env.ADMIN_SECRET_ID || 'MehranRasool@@00786786';
-
-    const isValid = timingSafeCompare(secretId || '', expectedSecretId);
-    if (!isValid) {
+    if (!secretId || typeof secretId !== 'string') {
       return res.status(401).json({ error: 'Invalid authentication request.' });
     }
 
     await initDb();
 
-    // Generate cryptographically secure 6-digit numeric OTP
+    const { rows: credRows } = await sql`SELECT secret_hash FROM admin_credentials WHERE id = 1 LIMIT 1;`;
+    const storedHash = credRows[0]?.secret_hash;
+    if (!storedHash) {
+      console.error('[Auth Error] No admin credentials record found in database.');
+      return res.status(500).json({ error: 'Server authentication configuration error.' });
+    }
+
+    const inputHash = crypto.createHash('sha256').update(secretId.trim()).digest('hex');
+    const isValid = timingSafeCompare(inputHash, storedHash);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid authentication request.' });
+    }
+
+    // Generate cryptographically secure challenge and 6-digit numeric OTP
+    const challengeId = crypto.randomUUID();
     const otp = crypto.randomInt(100000, 1000000).toString();
     const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
@@ -54,10 +74,10 @@ async function handleOtpRequest(req, res) {
     // DELETE previous rows first (single active code)
     await sql`DELETE FROM otp_codes;`;
 
-    // INSERT new hash, expiry, attempts=0, and IP
+    // INSERT new hash, expiry, attempts=0, challengeId, and IP
     await sql`
-      INSERT INTO otp_codes (code_hash, expires_at, attempts, requesting_ip)
-      VALUES (${otpHash}, ${expiresAt}, 0, ${ip});
+      INSERT INTO otp_codes (challenge_id, code_hash, expires_at, attempts, requesting_ip)
+      VALUES (${challengeId}, ${otpHash}, ${expiresAt}, 0, ${ip});
     `;
 
     const adminEmail = process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
@@ -92,7 +112,7 @@ async function handleOtpRequest(req, res) {
       });
     }
 
-    return res.status(200).json({ success: true, message: 'Verification code sent.' });
+    return res.status(200).json({ success: true, message: 'Verification code sent.', challengeId });
   } catch (error) {
     console.error('[OTP Request Error]', error?.message || error);
     return res.status(500).json({ error: 'Failed to process authentication request.' });
@@ -105,24 +125,49 @@ async function handleOtpVerify(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const allowed = checkRateLimit(`otp-verify:${ip}`, 10, 15 * 60 * 1000);
+  if (!allowed) {
+    return res.status(429).json({ error: 'Too many verification attempts from this IP. Please wait 15 minutes.' });
+  }
+
   try {
-    const { code } = req.body || {};
+    const { code, challengeId } = req.body || {};
     if (!code || typeof code !== 'string') {
       return res.status(400).json({ error: 'Verification code is required.' });
     }
 
     await initDb();
 
-    const { rows } = await sql`
-      SELECT id, code_hash, expires_at, attempts
-      FROM otp_codes
-      ORDER BY id DESC
-      LIMIT 1;
-    `;
+    let record = null;
+    if (challengeId && typeof challengeId === 'string') {
+      const { rows } = await sql`
+        SELECT id, code_hash, expires_at, attempts, requesting_ip
+        FROM otp_codes
+        WHERE challenge_id = ${challengeId}
+        LIMIT 1;
+      `;
+      record = rows[0];
+    } else {
+      const { rows } = await sql`
+        SELECT id, code_hash, expires_at, attempts, requesting_ip
+        FROM otp_codes
+        ORDER BY id DESC
+        LIMIT 1;
+      `;
+      record = rows[0];
+    }
 
-    const record = rows[0];
     if (!record) {
       return res.status(401).json({ error: 'No active verification code found. Please request a new code.' });
+    }
+
+    // IP challenge verification
+    if (record.requesting_ip && record.requesting_ip !== 'unknown' && record.requesting_ip !== ip) {
+      const isBothLocal = (record.requesting_ip === '127.0.0.1' || record.requesting_ip === '::1') && (ip === '127.0.0.1' || ip === '::1');
+      if (!isBothLocal && process.env.NODE_ENV === 'production') {
+        return res.status(401).json({ error: 'Authentication challenge session mismatch.' });
+      }
     }
 
     const expiresAt = new Date(record.expires_at).getTime();
@@ -154,7 +199,12 @@ async function handleOtpVerify(req, res) {
 
     await sql`DELETE FROM otp_codes WHERE id = ${record.id};`;
 
-    const sessionSecret = process.env.SESSION_SECRET || 'mehran_secure_session_secret_default_key_2026';
+    const sessionSecret = process.env.SESSION_SECRET;
+    if (!sessionSecret) {
+      console.error('[FATAL] SESSION_SECRET is not set.');
+      return res.status(500).json({ error: 'Server authentication configuration error.' });
+    }
+
     const sessionPayload = {
       role: 'admin',
       iat: Date.now(),
@@ -168,7 +218,8 @@ async function handleOtpVerify(req, res) {
     const cookieHeader = `admin_session=${sessionToken}; Path=/; Max-Age=86400; HttpOnly; SameSite=Strict${isProduction ? '; Secure' : ''}`;
 
     res.setHeader('Set-Cookie', cookieHeader);
-    return res.status(200).json({ success: true, token: sessionToken });
+    // STRICT SECURITY: Do not leak session token in JSON; authentication relies solely on the HttpOnly cookie
+    return res.status(200).json({ success: true });
   } catch (error) {
     console.error('[OTP Verify Error]', error?.message || error);
     return res.status(500).json({ error: 'Verification failed.' });
@@ -185,7 +236,64 @@ async function handleSessionCheck(req, res) {
   return res.status(200).json({ isAdmin });
 }
 
-// ------------------------- 4. Logout -------------------------
+// ------------------------- 4. Change Secret ID (Part 2) -------------------------
+async function handleChangeSecret(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // 1. Enforce active admin session
+  const isAdmin = verifyAdminSession(req);
+  if (!isAdmin) {
+    return res.status(401).json({ error: 'Unauthorized. Admin session required.' });
+  }
+
+  try {
+    const { currentSecretId, newSecretId } = req.body || {};
+
+    // 2. Validate current secret is provided
+    if (!currentSecretId || typeof currentSecretId !== 'string') {
+      return res.status(400).json({ error: 'Current secret ID is required.' });
+    }
+
+    // 3. Validate new secret meets length requirement (>= 12 characters)
+    if (!newSecretId || typeof newSecretId !== 'string' || newSecretId.length < 12) {
+      return res.status(400).json({ error: 'New secret ID must be at least 12 characters long.' });
+    }
+
+    await initDb();
+
+    // 4. Fetch stored hash from database
+    const { rows: credRows } = await sql`SELECT secret_hash FROM admin_credentials WHERE id = 1 LIMIT 1;`;
+    const storedHash = credRows[0]?.secret_hash;
+    if (!storedHash) {
+      return res.status(500).json({ error: 'Admin credentials record not found in database.' });
+    }
+
+    // 5. Compare current secret hash (timing-safe)
+    const currentInputHash = crypto.createHash('sha256').update(currentSecretId.trim()).digest('hex');
+    const isCurrentValid = timingSafeCompare(currentInputHash, storedHash);
+    if (!isCurrentValid) {
+      return res.status(401).json({ error: 'Current secret ID is incorrect.' });
+    }
+
+    // 6. Update to new hashed secret
+    const newHash = crypto.createHash('sha256').update(newSecretId.trim()).digest('hex');
+    await sql`
+      UPDATE admin_credentials
+      SET secret_hash = ${newHash}, updated_at = NOW()
+      WHERE id = 1;
+    `;
+
+    // No emails sent per spec
+    return res.status(200).json({ success: true, message: 'Password updated successfully.' });
+  } catch (error) {
+    console.error('[Change Secret Error]', error?.message || error);
+    return res.status(500).json({ error: 'Failed to update secret ID.' });
+  }
+}
+
+// ------------------------- 5. Logout -------------------------
 async function handleLogout(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

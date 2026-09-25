@@ -108,7 +108,7 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'],
   },
-  envPrefix: ['VITE_', 'NEXT_PUBLIC_', 'R2_'],
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
   },

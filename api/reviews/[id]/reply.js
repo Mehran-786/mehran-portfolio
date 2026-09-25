@@ -1,10 +1,29 @@
 import crypto from 'crypto';
 import { sql, initDb } from '../../_lib/db.js';
-import { verifyAdminSession, getReplyTransporter, sendEmailWithRetry } from '../../_lib/utils.js';
+import { verifyAdminSession, getReplyTransporter, sendEmailWithRetry, checkRateLimit, validateOrigin } from '../../_lib/utils.js';
 
 export default async function handler(req, res) {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    if (!validateOrigin(req)) {
+      return res.status(403).json({ error: 'Forbidden: Request origin not allowed.' });
+    }
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+
+  // Verify if caller has an active admin session
+  const isAdmin = verifyAdminSession(req);
+
+  // Rate limit: non-admin replies limited to 10 per hour per IP (Gap 3)
+  if (!isAdmin) {
+    const allowed = checkRateLimit(`reply-submit:${ip}`, 10, 60 * 60 * 1000);
+    if (!allowed) {
+      return res.status(429).json({ error: 'Too many replies submitted. Please try again later.' });
+    }
   }
 
   try {
@@ -24,9 +43,9 @@ export default async function handler(req, res) {
     }
 
     // Verify if caller claims to be owner (admin)
-    const isAdmin = verifyAdminSession(req);
     const effectiveIsOwner = Boolean(isOwner && isAdmin);
-    const effectiveName = effectiveIsOwner ? 'Mehran Rasool' : (typeof name === 'string' && name.trim() ? name.trim().slice(0, 50) : 'Community Member');
+    const cleanRawName = typeof name === 'string' ? name.replace(/<[^>]*>?/gm, '').trim() : '';
+    const effectiveName = effectiveIsOwner ? 'Mehran Rasool' : (cleanRawName ? cleanRawName.slice(0, 50) : 'Community Member');
 
     // Fetch parent review to ensure it exists and get reviewer email
     const { rows: parentReviews } = await sql`
@@ -57,7 +76,7 @@ export default async function handler(req, res) {
 
     // If owner replied and parent review had an email, send minimal notification email (B2)
     if (effectiveIsOwner && parentReview.email && parentReview.email.includes('@')) {
-      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehran-nine.vercel.app').replace(/\/+$/, '');
+      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').replace(/\/+$/, '');
       const reviewsUrl = `${siteUrl}/reviews`;
       const senderEmail = process.env.GMAIL_REPLY_USER || 'mehranrasool.sp24@gmail.com';
       const transporter = getReplyTransporter();

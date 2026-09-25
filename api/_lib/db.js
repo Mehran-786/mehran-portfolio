@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
@@ -37,10 +38,11 @@ export async function initDb() {
   }
 
   try {
-    // 1. OTP Codes Table (Fix 1)
+    // 1. OTP Codes Table (Challenge bound, short expiry, attempts limited)
     await sql`
       CREATE TABLE IF NOT EXISTS otp_codes (
         id SERIAL PRIMARY KEY,
+        challenge_id TEXT,
         code_hash TEXT NOT NULL,
         expires_at TIMESTAMPTZ NOT NULL,
         attempts INTEGER NOT NULL DEFAULT 0,
@@ -48,8 +50,9 @@ export async function initDb() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `;
+    await sql`ALTER TABLE otp_codes ADD COLUMN IF NOT EXISTS challenge_id TEXT;`;
 
-    // 2. Reviews Table (Fix 2)
+    // 2. Reviews Table (Defaults to unapproved for moderation)
     await sql`
       CREATE TABLE IF NOT EXISTS reviews (
         id TEXT PRIMARY KEY,
@@ -59,12 +62,12 @@ export async function initDb() {
         verdict TEXT NOT NULL,
         body TEXT NOT NULL,
         attachments JSONB NOT NULL DEFAULT '[]',
-        approved BOOLEAN NOT NULL DEFAULT true,
+        approved BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `;
 
-    // 3. Review Replies Table (Fix 2)
+    // 3. Review Replies Table
     await sql`
       CREATE TABLE IF NOT EXISTS review_replies (
         id TEXT PRIMARY KEY,
@@ -75,6 +78,31 @@ export async function initDb() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `;
+
+    // 4. Admin Credentials Table (Secure in-app secret management)
+    await sql`
+      CREATE TABLE IF NOT EXISTS admin_credentials (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        secret_hash TEXT NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CONSTRAINT single_row CHECK (id = 1)
+      );
+    `;
+
+    // Migration bootstrap: Fail closed if ADMIN_SECRET_ID is not configured
+    const { rows: credRows } = await sql`SELECT id FROM admin_credentials LIMIT 1;`;
+    if (credRows.length === 0) {
+      if (process.env.ADMIN_SECRET_ID) {
+        const secretHash = crypto.createHash('sha256').update(process.env.ADMIN_SECRET_ID.trim()).digest('hex');
+        await sql`
+          INSERT INTO admin_credentials (id, secret_hash, updated_at)
+          VALUES (1, ${secretHash}, NOW())
+          ON CONFLICT (id) DO NOTHING;
+        `;
+      } else {
+        console.warn('[DB Init] ADMIN_SECRET_ID is not configured in environment. Admin credentials table remains unseeded (fail closed).');
+      }
+    }
 
     isInitialized = true;
   } catch (err) {

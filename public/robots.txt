@@ -1,32 +1,55 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 
-# AI crawlers — explicitly allowed so your work appears in AI answers
+# === AI / LLM Crawlers — explicitly allowed for AEO + LLM-SEO ============
 User-agent: GPTBot
 Allow: /
+Disallow: /api/
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /api/
 
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /api/
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /api/
 
 User-agent: Claude-Web
 Allow: /
+Disallow: /api/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /api/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /api/
 
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /api/
 
 User-agent: CCBot
 Allow: /
+Disallow: /api/
 
-Sitemap: https://mehran-nine.vercel.app/sitemap.xml
+User-agent: Amazonbot
+Allow: /
+Disallow: /api/
+
+User-agent: YouBot
+Allow: /
+Disallow: /api/
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /api/
+
+# === Sitemap ===============================================================
+Sitemap: https://mehranrasool.me/sitemap.xml

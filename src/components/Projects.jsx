@@ -1,5 +1,12 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { projects } from '../data/portfolioData';
+
+const getProjectSlug = (id) => {
+  if (id === 'tool-website') return 'downsocial';
+  if (id === 'dungeon-crawler-rpg') return 'dungeon-crawler';
+  return id;
+};
 
 // Project Media Imports
 import aiDemoVideo from '../assets/projects/ai-gateway-demo.mp4';
@@ -266,7 +273,15 @@ const ProjectCard = ({ project, aosDelay, onImageClick }) => (
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 pt-4 border-t border-emerald-500/20">
+      <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-emerald-500/20">
+        <Link
+          to={`/projects/${getProjectSlug(project.id)}`}
+          className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-sm font-semibold hover:bg-emerald-500/30 hover:text-white transition-all duration-300"
+        >
+          Case Study
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+        </Link>
+
         {project.links.github && (
           <a 
             href={project.links.github}

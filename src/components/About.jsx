@@ -83,13 +83,13 @@ const About = () => {
               <div className="w-full aspect-square overflow-hidden rounded-2xl bg-black/60 border border-emerald-500/40 relative shadow-inner">
                 <img 
                   src={stackImage} 
-                  alt="Mehran Rasool — Full-Stack AI Engineer" 
+                  alt="Mehran Rasool — Full-Stack Developer" 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                 <div className="absolute bottom-3 left-3 right-3 text-left">
                   <p className="text-white text-base font-black tracking-wide">Mehran Rasool</p>
-                  <p className="text-emerald-400 text-xs font-semibold">Full-Stack AI Engineer</p>
+                  <p className="text-emerald-400 text-xs font-semibold">Full-Stack Developer</p>
                 </div>
               </div>
 

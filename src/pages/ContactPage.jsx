@@ -37,8 +37,8 @@ export default function ContactPage() {
   return (
     <>
       <SEO
-        title="Hire Mehran Rasool — Web & Mobile App Developer"
-        description="Hire Mehran Rasool for freelance and contract work in full-stack web development, Flutter mobile app development, and applied AI systems. Based in Pakistan."
+        title="Contact Mehran Rasool — Full-Stack Developer"
+        description="Contact Mehran Rasool, a full-stack developer based in Wah Cantt, Pakistan, for freelance web development, Flutter apps, and engineering collaborations."
         canonical={getSiteUrl('/contact')}
         jsonLd={schema}
       />
@@ -47,7 +47,7 @@ export default function ContactPage() {
         <header className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-8 pb-2 text-center">
           <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">Let's Build Together</p>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
-            Hire Mehran Rasool — Full-Stack Developer
+            Contact Mehran Rasool — Full-Stack Developer
           </h1>
           <p className="text-white/70 max-w-2xl mx-auto mt-3 text-base md:text-lg">
             Available for freelance and contract engineering in web application development, Flutter mobile apps, REST APIs, and applied AI systems.

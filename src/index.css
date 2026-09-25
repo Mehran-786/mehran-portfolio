@@ -108,3 +108,10 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th {
 .glass-panel:hover {
   border-color: rgba(16, 185, 129, 0.4);
 }
+
+/* Mobile hero dvh fallback — 100dvh supported on Android Chrome 89+, iOS Safari 15.4+.
+   For the tiny fraction of older browsers without dvh, fall back to 100vh. */
+@supports not (height: 100dvh) {
+  .mobile-hero-fallback { height: 100vh; }
+}
+

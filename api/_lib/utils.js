@@ -27,6 +27,21 @@ export function checkRateLimit(key, max, windowMs) {
 }
 
 /**
+ * Escapes unsafe characters for HTML/Email rendering to prevent injection/XSS
+ * @param {string} str - Raw user input
+ * @returns {string} Sanitized string
+ */
+export function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
  * Cloudflare R2 S3 Client
  */
 export function getR2Client() {
@@ -129,7 +144,11 @@ export function verifyAdminSession(req) {
     if (!sessionToken || !sessionToken.includes('.')) return false;
 
     const [payloadB64, sig] = sessionToken.split('.');
-    const sessionSecret = process.env.SESSION_SECRET || 'mehran_secure_session_secret_default_key_2026';
+    const sessionSecret = process.env.SESSION_SECRET;
+    if (!sessionSecret) {
+      console.error('[FATAL] SESSION_SECRET is not set.');
+      return false;
+    }
     const expectedSig = crypto.createHmac('sha256', sessionSecret).update(payloadB64).digest('hex');
 
     if (!timingSafeCompare(sig, expectedSig)) return false;
@@ -142,4 +161,42 @@ export function verifyAdminSession(req) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Validates request origin for state-changing endpoints (CORS & CSRF protection).
+ * - Enforces exact origin matching against the configured production domain.
+ * - Allows local development origins only when NODE_ENV !== 'production'.
+ * - Safe handling of requests without Origin: inspects Sec-Fetch-Site to block cross-site requests with stripped Origin headers.
+ */
+export function validateOrigin(req) {
+  const origin = req.headers?.['origin'];
+
+  if (!origin) {
+    // When no Origin header is present (e.g. direct server-to-server or curl),
+    // modern browsers send Sec-Fetch-Site on fetch/xhr requests.
+    // If Sec-Fetch-Site indicates 'cross-site', reject immediately.
+    const secFetchSite = req.headers?.['sec-fetch-site'];
+    if (secFetchSite && secFetchSite === 'cross-site') {
+      return false;
+    }
+    return true;
+  }
+
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').replace(/\/+$/, '');
+  const allowed = [
+    siteUrl,
+    'https://mehranrasool.me',
+  ];
+
+  // Restrict localhost origins to non-production environments only
+  const isProd = process.env.NODE_ENV === 'production';
+  if (!isProd) {
+    allowed.push('http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173');
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return true;
+    }
+  }
+
+  return allowed.includes(origin);
 }

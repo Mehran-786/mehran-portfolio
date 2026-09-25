@@ -1,61 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
-import { getSiteUrl, getR2Url, R2_PUBLIC_URL } from '../config/env';
+import { getSiteUrl, getR2Url } from '../config/env';
 
 const VERDICTS = ["Excellent", "Good", "Average", "Needs work"];
 
 // Fallback SVG video poster for uploaded videos
 const DEFAULT_VIDEO_POSTER = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225"><rect width="400" height="225" fill="%23050f09"/><circle cx="200" cy="112" r="32" fill="%2310b981" opacity="0.85"/><polygon points="192,98 216,112 192,126" fill="%23ffffff"/><text x="200" y="165" fill="%2394a3b8" font-family="sans-serif" font-size="12" text-anchor="middle">Video Attachment</text></svg>`;
-
-// Seed reviews (storing object keys, with URLs resolved dynamically)
-const INITIAL_REVIEWS = [
-  {
-    id: "rev-1",
-    name: "Hamza Tariq",
-    email: "hamza.dev@example.com",
-    rating: 5,
-    verdict: "Excellent",
-    body: "Tested the 5-stage LLM security gateway with adversarial prompt injection attacks and Pakistani CNIC queries. The 82.7% accuracy and zero PII leaks held up reliably. Average latency was well under 600ms. Exceptional engineering!",
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    approved: true,
-    attachments: [],
-    replies: [
-      {
-        id: "rep-1-1",
-        name: "Mehran Rasool",
-        isOwner: true,
-        body: "Thanks Hamza! Glad the custom Presidio recognizers for CNIC and Groq Llama-3.1 inference performed well during your stress tests.",
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      }
-    ]
-  },
-  {
-    id: "rev-2",
-    name: "Sarah Jenkins",
-    email: "sarah.j@techlead.co",
-    rating: 5,
-    verdict: "Excellent",
-    body: "The Flask extraction service behind Gunicorn and Cloudflare is remarkably fast. Handles HD 1080p downloads with zero stutter and rate limits abusive traffic automatically.",
-    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    approved: true,
-    attachments: [],
-    replies: []
-  },
-  {
-    id: "rev-3",
-    name: "Zubair Ahmed",
-    email: "zubair.ahmed@cuiwah.edu.pk",
-    rating: 5,
-    verdict: "Excellent",
-    body: "The multi-engine pipeline and Pydantic data contracts between the SEO and Engagement engines are built strictly on SOLID principles. The Vite dashboard makes analytics crystal clear.",
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    approved: true,
-    attachments: [],
-    replies: []
-  }
-];
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -101,10 +53,20 @@ export default function ReviewsPage() {
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [otpCountdown, setOtpCountdown] = useState(300); // 5 minutes
   const [canResend, setCanResend] = useState(false);
+  const [adminChallengeId, setAdminChallengeId] = useState('');
   const [adminError, setAdminError] = useState('');
   const [authError, setAuthError] = useState('');
   const [authNameInput, setAuthNameInput] = useState('');
   const [authEmailInput, setAuthEmailInput] = useState('');
+
+  // Change Password Modal state (Part 2)
+  const [showChangeSecretModal, setShowChangeSecretModal] = useState(false);
+  const [currentSecretInput, setCurrentSecretInput] = useState('');
+  const [newSecretInput, setNewSecretInput] = useState('');
+  const [confirmSecretInput, setConfirmSecretInput] = useState('');
+  const [changeSecretError, setChangeSecretError] = useState('');
+  const [changeSecretSuccess, setChangeSecretSuccess] = useState('');
+  const [changeSecretLoading, setChangeSecretLoading] = useState(false);
 
   // Delete Confirmation Modal state (A3)
   const [deleteModalState, setDeleteModalState] = useState({
@@ -159,26 +121,13 @@ export default function ReviewsPage() {
     } catch {}
   }, [theme]);
 
-  // Check admin session on mount
-  useEffect(() => {
-    let mounted = true;
-    fetch('/api/auth/session-check')
-      .then(res => res.json())
-      .then(data => {
-        if (mounted && data && typeof data.isAdmin === 'boolean') {
-          setIsAdmin(data.isAdmin);
-        }
-      })
-      .catch(() => {});
-    return () => { mounted = false; };
-  }, []);
-
   // Fetch reviews from Postgres DB
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async (adminMode = isAdmin) => {
     setIsLoadingReviews(true);
     setLoadReviewsError(null);
     try {
-      const res = await fetch('/api/reviews');
+      const url = adminMode ? '/api/reviews?admin=true' : '/api/reviews';
+      const res = await fetch(url);
       if (!res.ok) {
         throw new Error(`Failed to load reviews (${res.status})`);
       }
@@ -191,11 +140,28 @@ export default function ReviewsPage() {
     } finally {
       setIsLoadingReviews(false);
     }
-  };
+  }, [isAdmin]);
+
+  // Check admin session on mount
+  useEffect(() => {
+    let mounted = true;
+    fetch('/api/auth/session-check')
+      .then(res => res.json())
+      .then(data => {
+        if (mounted && data && typeof data.isAdmin === 'boolean') {
+          setIsAdmin(data.isAdmin);
+          if (data.isAdmin) {
+            fetchReviews(true);
+          }
+        }
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [fetchReviews]);
 
   useEffect(() => {
     fetchReviews();
-  }, []);
+  }, [fetchReviews]);
 
   // VisualViewport API listener for mobile keyboard shifts (F9)
   useEffect(() => {
@@ -294,6 +260,7 @@ export default function ReviewsPage() {
         setOtpCountdown(300);
         setCanResend(false);
         setOtpDigits(['', '', '', '', '', '']);
+        setAdminChallengeId(data.challengeId || '');
         setTimeout(() => otpInputsRef.current[0]?.focus(), 100);
       } else {
         setAdminError(data.error || "Authentication failed.");
@@ -316,16 +283,18 @@ export default function ReviewsPage() {
       const res = await fetch('/api/auth/otp-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: fullCode }),
+        body: JSON.stringify({ code: fullCode, challengeId: adminChallengeId }),
       });
       const data = await res.json();
 
       if (res.ok && data.success) {
         setIsAdmin(true);
+        fetchReviews(true);
         setShowAdminModal(false);
         setAdminStep(1);
         setSecretIdInput('');
         setOtpDigits(['', '', '', '', '', '']);
+        setAdminChallengeId('');
       } else {
         setAdminError(data.error || "Invalid code. Please try again.");
       }
@@ -373,6 +342,55 @@ export default function ReviewsPage() {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch {}
     setIsAdmin(false);
+  };
+
+  const handleChangeSecretSubmit = async (e) => {
+    e.preventDefault();
+    setChangeSecretError('');
+    setChangeSecretSuccess('');
+
+    if (!currentSecretInput) {
+      setChangeSecretError('Current secret ID is required.');
+      return;
+    }
+    if (!newSecretInput || newSecretInput.length < 12) {
+      setChangeSecretError('New secret ID must be at least 12 characters long.');
+      return;
+    }
+    if (newSecretInput !== confirmSecretInput) {
+      setChangeSecretError('New secret ID and confirmation do not match.');
+      return;
+    }
+
+    setChangeSecretLoading(true);
+    try {
+      const res = await fetch('/api/auth/change-secret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentSecretId: currentSecretInput,
+          newSecretId: newSecretInput,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setChangeSecretError(data.error || 'Failed to update password.');
+        setChangeSecretLoading(false);
+        return;
+      }
+      setChangeSecretSuccess('Password updated successfully.');
+      setCurrentSecretInput('');
+      setNewSecretInput('');
+      setConfirmSecretInput('');
+      setTimeout(() => {
+        setShowChangeSecretModal(false);
+        setChangeSecretSuccess('');
+      }, 1800);
+    } catch {
+      setChangeSecretError('An unexpected network error occurred.');
+    } finally {
+      setChangeSecretLoading(false);
+    }
   };
 
   // Direct R2 presigned file upload via XMLHttpRequest with real progress (D1-D4)
@@ -565,7 +583,9 @@ export default function ReviewsPage() {
       }
 
       const newReview = data;
-      setReviews(prev => [...prev, newReview]);
+      if (isAdmin) {
+        setReviews(prev => [...prev, newReview]);
+      }
       setSubmitSuccess(true);
       setFormBody("");
       setFormAttachments([]);
@@ -574,12 +594,31 @@ export default function ReviewsPage() {
       setTimeout(() => {
         setSubmitSuccess(false);
         threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 1000);
+      }, 1500);
     } catch (err) {
       console.error('[Submit Review Error]', err);
       setFormErrors(prev => ({ ...prev, body: err.message || 'Submission failed. Please try again.' }));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Approve Review (Admin)
+  const handleApproveReview = async (reviewId) => {
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approved: true }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to approve review.');
+      }
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, approved: true } : r));
+    } catch (err) {
+      console.error('[Approve Review Error]', err);
+      alert('Failed to approve review: ' + err.message);
     }
   };
 
@@ -710,7 +749,7 @@ export default function ReviewsPage() {
 
   // Filtering & Sorting (project filter removed)
   const filteredReviews = reviews
-    .filter(r => r.approved)
+    .filter(r => (isAdmin ? true : r.approved))
     .filter(r => filterRating === "ALL" || r.rating === parseInt(filterRating, 10))
     .filter(r => filterVerdict === "ALL" || r.verdict === filterVerdict)
     .sort((a, b) => {
@@ -761,8 +800,8 @@ export default function ReviewsPage() {
   return (
     <>
       <SEO
-        title="Client Reviews & Feedback — Mehran Rasool"
-        description="Read genuine peer and client reviews on Mehran Rasool's web applications, Flutter mobile apps, and secure applied AI gateways. Leave your verified feedback."
+        title="Client Reviews — Mehran Rasool"
+        description="Read client and peer reviews for Mehran Rasool's full-stack development, Flutter mobile apps, and software engineering work."
         canonical={getSiteUrl('/reviews')}
         jsonLd={REVIEWS_SCHEMA}
       />
@@ -810,6 +849,19 @@ export default function ReviewsPage() {
                 {isAdmin ? (
                   <div className="mr-admin-badge-group">
                     <span className="mr-admin-active-badge">👑 Admin Active</span>
+                    <button
+                      onClick={() => {
+                        setCurrentSecretInput('');
+                        setNewSecretInput('');
+                        setConfirmSecretInput('');
+                        setChangeSecretError('');
+                        setChangeSecretSuccess('');
+                        setShowChangeSecretModal(true);
+                      }}
+                      className="mr-btn-ghost text-xs"
+                    >
+                      Change Password
+                    </button>
                     <button onClick={handleAdminLogout} className="mr-btn-ghost text-xs">Logout</button>
                   </div>
                 ) : (
@@ -961,6 +1013,11 @@ export default function ReviewsPage() {
                         <div className="flex items-center gap-2">
                           <span className="mr-author-name">{rev.name}</span>
                           <span className="mr-verdict-chip">{rev.verdict}</span>
+                          {rev.approved === false && (
+                            <span className="text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                              Pending Approval
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -972,6 +1029,15 @@ export default function ReviewsPage() {
                         ))}
                       </div>
                       <time className="mr-timestamp">{timeAgo(rev.createdAt)}</time>
+                      {isAdmin && rev.approved === false && (
+                        <button
+                          onClick={() => handleApproveReview(rev.id)}
+                          className="mr-1 text-xs font-semibold px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition-colors"
+                          title="Approve review for public display"
+                        >
+                          ✓ Approve
+                        </button>
+                      )}
                       {isAdmin && (
                         <button
                           onClick={(e) => triggerDeleteReviewModal(rev, e.currentTarget)}
@@ -1250,7 +1316,7 @@ export default function ReviewsPage() {
                       <span>Posting...</span>
                     </>
                   ) : submitSuccess ? (
-                    "✓ Posted!"
+                    isAdmin ? "✓ Posted!" : "✓ Submitted for Review!"
                   ) : (
                     "Post Feedback"
                   )}
@@ -1456,6 +1522,88 @@ export default function ReviewsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Change Password / Secret ID Modal (Part 2) */}
+        {showChangeSecretModal && (
+          <div className="mr-modal-backdrop" onClick={() => !changeSecretLoading && setShowChangeSecretModal(false)}>
+            <div className="mr-modal-panel" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">🔑</span>
+                <h3 className="text-xl font-bold">Change Admin Secret ID</h3>
+              </div>
+              <form onSubmit={handleChangeSecretSubmit} className="flex flex-col gap-3.5">
+                <p className="text-sm opacity-80 mb-1">
+                  Update your admin secret password. The new secret must be at least 12 characters long.
+                </p>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1">Current Secret ID</label>
+                  <input
+                    type="password"
+                    required
+                    value={currentSecretInput}
+                    onChange={(e) => setCurrentSecretInput(e.target.value)}
+                    placeholder="Enter current secret ID..."
+                    className="mr-input w-full"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1">New Secret ID</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={12}
+                    value={newSecretInput}
+                    onChange={(e) => setNewSecretInput(e.target.value)}
+                    placeholder="Enter new secret ID..."
+                    className="mr-input w-full"
+                  />
+                  <span className="text-[11px] text-white/50 block mt-1">Minimum 12 characters required</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1">Confirm New Secret ID</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={12}
+                    value={confirmSecretInput}
+                    onChange={(e) => setConfirmSecretInput(e.target.value)}
+                    placeholder="Confirm new secret ID..."
+                    className="mr-input w-full"
+                  />
+                </div>
+
+                {changeSecretError && <p className="mr-error-msg">{changeSecretError}</p>}
+                {changeSecretSuccess && (
+                  <p className="text-emerald-400 text-sm font-semibold p-2.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+                    {changeSecretSuccess}
+                  </p>
+                )}
+
+                <div className="flex justify-end gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowChangeSecretModal(false)}
+                    className="mr-btn-ghost mr-touch-btn"
+                    disabled={changeSecretLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="mr-submit-btn mr-touch-btn"
+                    disabled={changeSecretLoading}
+                  >
+                    {changeSecretLoading ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

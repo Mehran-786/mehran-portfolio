@@ -26,15 +26,16 @@ dist-ssr
 # Local Environment Variables
 .env
 .env.local
+.env.production
 .env.*.local
 
-# Root duplicate raw media
+# Root duplicate raw media (deleted — kept here to prevent re-adding)
 /Hero Image.png
 /Hero Talking Video.mp4
 /Hero.jpeg
 /Mobile Hero.jpeg
 /Mobile hero video.mp4
+/mobile hero1.jpg
 /logo.jpeg
 /Resume.docx
 /Resume.pdf
-

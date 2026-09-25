@@ -7,15 +7,15 @@ export const personalInfo = {
   name: "Mehran Rasool",
   firstName: "Mehran",
   brandName: "Mehran Rasool",
-  title: "Full-Stack AI Engineer & Autonomous Systems Architect",
-  location: "Islamabad / Wah Cantt, Pakistan",
+  title: "Full-Stack Developer",
+  location: "Wah Cantt, Punjab, Pakistan",
   phone: "+92 328 9552955",
   emails: {
     primary: "mehranrasool.sp24@gmail.com",
     secondary: "SP24-BCS-008@cuiwah.edu.pk",
   },
   summary:
-    "Full-Stack AI Engineer and Autonomous Systems Architect who designs and ships high-impact production platforms. Specializes in multi-agent AI boards, secure LLM gateways, cross-platform mobile apps with Flutter & Dart, high-throughput FastAPI/React architectures, and high-performance C++ systems.",
+    "Full-Stack Developer who designs and ships high-impact production web platforms, cross-platform mobile apps with Flutter & Dart, high-throughput FastAPI/React architectures, and applied AI systems.",
   resumeUrl: "/Resume.pdf",
 };
 
@@ -28,7 +28,7 @@ export const socialLinks = {
 
 export const heroContent = {
   greeting: "Hi, I'm Mehran Rasool",
-  titleHighlight: "Full-Stack Web & Flutter App Developer",
+  titleHighlight: "Full-Stack Developer",
   subtitle:
     "Mehran Rasool is a full-stack developer based in Wah Cantt, Pakistan, who builds web applications, Flutter mobile apps, and applied AI systems.",
   ctaPrimary: { text: "Explore My Work", href: "#projects" },

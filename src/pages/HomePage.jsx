@@ -21,53 +21,6 @@ const getHomeSchemas = () => {
   const personId = `${siteUrl}/#person`;
   const websiteId = `${siteUrl}/#website`;
 
-  const homeFaqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Who is Mehran Rasool and what does he build?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Mehran Rasool is a full-stack developer based in Wah Cantt, Pakistan, who builds web applications, Flutter mobile apps, and applied AI systems. His engineering work includes production web platforms, cross-platform mobile apps for iOS and Android, and hybrid LLM security gateways."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What is the Secure LLM Gateway built by Mehran Rasool?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "The Secure LLM Gateway is a five-stage hybrid security pipeline developed by Mehran Rasool that defends LLM applications against prompt injection, jailbreaking, and PII leakage. Evaluated across 150 benchmark prompts, it achieved 82.7% overall accuracy, 100% PII-masking recall, and 525ms average latency."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How does the YouTube analytics platform (YT VISION) work?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "YT VISION is an enterprise analytics platform powered by a FastAPI backend and React dashboard built on SOLID architectural principles. It processes channel metrics across an eight-stage pipeline with shared Pydantic data contracts between specialized SEO and Engagement engines."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What technical stack does Mehran Rasool specialize in?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Mehran Rasool specializes in React, Next.js, Flutter, Dart, Python, FastAPI, Flask, C++, and Java. He deploys web frontends on Vercel and backend services on Linux servers behind Nginx and Gunicorn with Cloudflare edge caching."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Is Mehran Rasool available for hire for freelance projects?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes. Mehran Rasool is actively open for freelance and contract work in web development, web application development, and Flutter mobile app development, collaborating remotely with international clients from Wah Cantt, Pakistan."
-        }
-      }
-    ]
-  };
-
   const homeWebsitePersonSchema = {
     "@context": "https://schema.org",
     "@graph": [
@@ -76,7 +29,7 @@ const getHomeSchemas = () => {
         "@id": websiteId,
         "url": `${siteUrl}/`,
         "name": "Mehran Rasool",
-        "description": "Portfolio of Mehran Rasool — full-stack web and mobile app developer",
+        "description": "Portfolio of Mehran Rasool — Full-Stack Developer",
         "publisher": { "@id": personId },
         "inLanguage": "en"
       },
@@ -86,7 +39,7 @@ const getHomeSchemas = () => {
         "name": "Mehran Rasool",
         "url": `${siteUrl}/`,
         "image": `${siteUrl}/logo.png`,
-        "jobTitle": "Full-Stack Developer & AI Engineer",
+        "jobTitle": "Full-Stack Developer",
         "address": {
           "@type": "PostalAddress",
           "addressLocality": "Wah Cantt",
@@ -126,7 +79,7 @@ const getHomeSchemas = () => {
   const homeSpeakableSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "Mehran Rasool — Full-Stack Web & App Developer",
+    "name": "Mehran Rasool — Full-Stack Developer",
     "url": `${siteUrl}/`,
     "speakable": {
       "@type": "SpeakableSpecification",
@@ -134,7 +87,7 @@ const getHomeSchemas = () => {
     }
   };
 
-  return [homeWebsitePersonSchema, homeFaqSchema, homeSpeakableSchema];
+  return [homeWebsitePersonSchema, homeSpeakableSchema];
 };
 
 export default function HomePage() {
@@ -143,8 +96,8 @@ export default function HomePage() {
   return (
     <>
       <SEO
-        title="Mehran Rasool — Full-Stack Web & App Developer"
-        description="Mehran Rasool is a full-stack web and mobile developer building high-impact web apps with React & Next.js, Flutter apps, and secure applied AI systems."
+        title="Mehran Rasool — Full-Stack Developer"
+        description="Mehran Rasool is a full-stack developer based in Wah Cantt, Pakistan, specializing in web development, Flutter apps, and AI systems."
         canonical={getSiteUrl('/')}
         ogType="website"
         jsonLd={schemas}

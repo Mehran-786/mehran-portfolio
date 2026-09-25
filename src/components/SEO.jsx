@@ -1,18 +1,19 @@
 import React, { useEffect } from 'react';
-import { SITE_URL, getSiteUrl } from '../config/env';
+import { getSiteUrl } from '../config/env';
 
 /**
  * SEO component to dynamically manage per-page head tags & structured data
  * All URLs are dynamically built from SITE_URL (env NEXT_PUBLIC_SITE_URL).
  */
 export default function SEO({
-  title = "Mehran Rasool — Full-Stack Web & App Developer",
-  description = "Mehran Rasool is a full-stack developer and AI engineer based in Wah Cantt, Pakistan, building web apps with React and Next.js, Flutter mobile apps, and applied AI systems.",
+  title = "Mehran Rasool — Full-Stack Developer",
+  description = "Mehran Rasool is a full-stack developer based in Wah Cantt, Pakistan, specializing in web development, Flutter apps, and AI systems.",
   canonical = getSiteUrl('/'),
   ogType = "website",
   ogImage = getSiteUrl('/og-image.png'),
-  ogImageAlt = "Mehran Rasool — Full-Stack Web, Flutter App & AI Developer",
+  ogImageAlt = "Mehran Rasool — Full-Stack Developer Portfolio",
   jsonLd = null,
+  noindex = false,
 }) {
   useEffect(() => {
     // 1. Update Title
@@ -32,7 +33,10 @@ export default function SEO({
       el.setAttribute('content', value);
     };
 
-    // 2. Standard Meta
+    // 2. Robots
+    setMeta('name', 'robots', noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
+
+    // 3. Standard Meta
     setMeta('name', 'description', description);
 
     // 3. Canonical Tag
@@ -81,7 +85,7 @@ export default function SEO({
 
     // Scroll to top when route changes
     window.scrollTo(0, 0);
-  }, [title, description, canonical, ogType, ogImage, ogImageAlt, jsonLd]);
+  }, [title, description, canonical, ogType, ogImage, ogImageAlt, jsonLd, noindex]);
 
   return null;
 }

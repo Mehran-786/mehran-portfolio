@@ -2,6 +2,12 @@ import { ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
 import { getR2Client } from '../_lib/utils.js';
 
 export default async function handler(req, res) {
+  // Protect cron endpoint: verify Vercel Cron authorization header if CRON_SECRET is configured
+  const authHeader = req.headers?.authorization;
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized cron request.' });
+  }
+
   try {
     const r2 = getR2Client();
     const bucket = process.env.R2_BUCKET_NAME || 'mehranrasool-reviews';

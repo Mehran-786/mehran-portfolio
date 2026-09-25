@@ -67,7 +67,7 @@ const getAboutSchemas = () => {
   const profilePageSchema = {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
-    name: "About Mehran Rasool — Full-Stack Web & Flutter App Developer",
+    name: "About Mehran Rasool — Full-Stack Developer",
     url: `${siteUrl}/about`,
     description:
       "About Mehran Rasool — full-stack developer specializing in web development, web application development, and Flutter mobile app development, with applied AI and LLM security engineering.",
@@ -137,8 +137,8 @@ export default function AboutPage() {
   return (
     <>
       <SEO
-        title="About Mehran Rasool — Full-Stack Web & Flutter App Developer"
-        description="Mehran Rasool is a full-stack developer building web applications, Flutter mobile apps, and applied AI systems with React and FastAPI. Based in Wah Cantt, PK."
+        title="About Mehran Rasool — Full-Stack Developer"
+        description="Learn more about Mehran Rasool, a full-stack developer from Wah Cantt, Pakistan, building high-impact web applications, Flutter mobile apps, and secure AI systems."
         canonical={getSiteUrl('/about')}
         ogType="profile"
         jsonLd={schemas}
@@ -153,10 +153,11 @@ export default function AboutPage() {
           {/* ---------- Opening ---------- */}
           <header className="mr-intro">
             <p className="mr-kicker">About</p>
-            <h1>
+            <h1>About Mehran Rasool — Full-Stack Developer</h1>
+            <p className="text-xl md:text-2xl text-emerald-300 font-semibold mt-3 mb-4 leading-snug">
               I build software that ships — web, mobile, and the AI layer in
               between.
-            </h1>
+            </p>
             <div className="mr-byline-bar">
               <span>By <a href="/about" className="mr-author-link">Mehran Rasool</a></span>
               <span className="mr-dot" aria-hidden="true">•</span>
