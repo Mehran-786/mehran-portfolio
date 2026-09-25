@@ -184,19 +184,25 @@ export function validateOrigin(req) {
   }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').replace(/\/+$/, '');
-  const allowed = [
+  const allowed = new Set([
     siteUrl,
     'https://mehranrasool.me',
-  ];
+    'https://www.mehranrasool.me',
+  ]);
+
+  if (siteUrl.startsWith('https://www.')) {
+    allowed.add(siteUrl.replace('https://www.', 'https://'));
+  } else if (siteUrl.startsWith('https://')) {
+    allowed.add(siteUrl.replace('https://', 'https://www.'));
+  }
 
   // Restrict localhost origins to non-production environments only
   const isProd = process.env.NODE_ENV === 'production';
   if (!isProd) {
-    allowed.push('http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173');
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
       return true;
     }
   }
 
-  return allowed.includes(origin);
+  return allowed.has(origin);
 }
