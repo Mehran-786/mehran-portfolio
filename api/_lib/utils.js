@@ -164,45 +164,77 @@ export function verifyAdminSession(req) {
 }
 
 /**
- * Validates request origin for state-changing endpoints (CORS & CSRF protection).
- * - Enforces exact origin matching against the configured production domain.
- * - Allows local development origins only when NODE_ENV !== 'production'.
- * - Safe handling of requests without Origin: inspects Sec-Fetch-Site to block cross-site requests with stripped Origin headers.
+ * Validates request origin/referer for state-changing endpoints (CORS & CSRF protection).
+ * Explicitly allows:
+ * - https://mehranrasool.me
+ * - https://www.mehranrasool.me
+ * - process.env.NEXT_PUBLIC_SITE_URL (and www / non-www variant)
+ * - Vercel preview URLs (*.vercel.app)
+ * - Localhost development origins (http://localhost:5173, http://localhost:3000, 127.0.0.1)
+ * Normalizes both Origin and Referer headers.
  */
 export function validateOrigin(req) {
-  const origin = req.headers?.['origin'];
+  let requestOrigin = req.headers?.['origin'] || '';
 
-  if (!origin) {
-    // When no Origin header is present (e.g. direct server-to-server or curl),
-    // modern browsers send Sec-Fetch-Site on fetch/xhr requests.
-    // If Sec-Fetch-Site indicates 'cross-site', reject immediately.
-    const secFetchSite = req.headers?.['sec-fetch-site'];
-    if (secFetchSite && secFetchSite === 'cross-site') {
-      return false;
+  // If Origin header is missing, extract and normalize origin from Referer
+  if (!requestOrigin && req.headers?.['referer']) {
+    try {
+      const refererUrl = new URL(req.headers['referer']);
+      requestOrigin = refererUrl.origin;
+    } catch {
+      requestOrigin = '';
     }
-    return true;
   }
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').replace(/\/+$/, '');
-  const allowed = new Set([
-    siteUrl,
+  // If still no origin or referer (e.g. direct server-to-server or curl)
+  if (!requestOrigin) {
+    const secFetchSite = req.headers?.['sec-fetch-site'];
+    if (secFetchSite && secFetchSite === 'cross-site') {
+      return false; // Cross-site browser request with stripped origin
+    }
+    return true; // Direct same-origin or trusted server invocation
+  }
+
+  // Normalize origin: lowercase and strip trailing slash
+  requestOrigin = requestOrigin.trim().toLowerCase().replace(/\/+$/, '');
+
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').trim().toLowerCase().replace(/\/+$/, '');
+
+  const explicitAllowed = new Set([
     'https://mehranrasool.me',
     'https://www.mehranrasool.me',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+    siteUrl,
   ]);
 
   if (siteUrl.startsWith('https://www.')) {
-    allowed.add(siteUrl.replace('https://www.', 'https://'));
+    explicitAllowed.add(siteUrl.replace('https://www.', 'https://'));
   } else if (siteUrl.startsWith('https://')) {
-    allowed.add(siteUrl.replace('https://', 'https://www.'));
+    explicitAllowed.add(siteUrl.replace('https://', 'https://www.'));
   }
 
-  // Restrict localhost origins to non-production environments only
-  const isProd = process.env.NODE_ENV === 'production';
-  if (!isProd) {
-    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+  // Exact match check
+  if (explicitAllowed.has(requestOrigin)) {
+    return true;
+  }
+
+  // Check localhost / 127.0.0.1 on any port
+  if (requestOrigin.startsWith('http://localhost:') || requestOrigin.startsWith('http://127.0.0.1:')) {
+    return true;
+  }
+
+  // Check Vercel preview deployments (*.vercel.app)
+  try {
+    const urlObj = new URL(requestOrigin);
+    if (urlObj.hostname === 'vercel.app' || urlObj.hostname.endsWith('.vercel.app')) {
       return true;
     }
+  } catch {
+    return false;
   }
 
-  return allowed.has(origin);
+  return false;
 }
