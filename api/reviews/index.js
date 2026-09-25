@@ -14,8 +14,28 @@ export default async function handler(req, res) {
 
   await initDb();
 
-  // ------------------------- GET: Fetch reviews -------------------------
+  // ------------------------- GET: Fetch reviews or Captcha challenge -------------------------
   if (req.method === 'GET') {
+    // Generate anti-bot Math challenge
+    if (req.query?.action === 'captcha') {
+      const ops = ['+', '-'];
+      const op = ops[Math.floor(Math.random() * ops.length)];
+      let num1 = Math.floor(Math.random() * 10) + 3; // 3 to 12
+      let num2 = Math.floor(Math.random() * 8) + 1; // 1 to 8
+      if (op === '-' && num1 < num2) {
+        [num1, num2] = [num2, num1];
+      }
+      const answer = op === '+' ? (num1 + num2) : (num1 - num2);
+      const timestamp = Date.now();
+      const secret = process.env.ADMIN_SESSION_SECRET || 'mehran-portfolio-math-captcha-secret-2026';
+      const hmac = crypto.createHmac('sha256', secret).update(`${answer}:${timestamp}`).digest('hex');
+      const token = `${timestamp}.${hmac}`;
+      return res.status(200).json({
+        question: `What is ${num1} ${op} ${num2}?`,
+        token,
+      });
+    }
+
     try {
       const isAdmin = verifyAdminSession(req);
       const showAll = isAdmin && req.query?.admin === 'true';
@@ -86,7 +106,34 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { name, email, rating, verdict, body, attachments = [] } = req.body || {};
+      const { name, email, rating, verdict, body, attachments = [], mathAnswer, mathToken } = req.body || {};
+
+      const isAdmin = verifyAdminSession(req);
+
+      // Verify Anti-Bot Math Captcha (Anti-spam protection)
+      if (!isAdmin) {
+        if (!mathToken || mathAnswer === undefined || mathAnswer === null || String(mathAnswer).trim() === '') {
+          return res.status(400).json({ error: 'Please solve the anti-bot math verification question.' });
+        }
+        const [tsStr, providedHmac] = String(mathToken).split('.');
+        const ts = parseInt(tsStr, 10);
+        const now = Date.now();
+        // Valid for 15 minutes (900,000 ms)
+        if (isNaN(ts) || !providedHmac || (now - ts) > 15 * 60 * 1000 || (ts - now) > 60 * 1000) {
+          return res.status(400).json({ error: 'Math verification expired. Please refresh the question.' });
+        }
+        const parsedAns = parseInt(String(mathAnswer).trim(), 10);
+        if (isNaN(parsedAns)) {
+          return res.status(400).json({ error: 'Invalid math answer. Please enter a valid number.' });
+        }
+        const secret = process.env.ADMIN_SESSION_SECRET || 'mehran-portfolio-math-captcha-secret-2026';
+        const expectedHmac = crypto.createHmac('sha256', secret).update(`${parsedAns}:${ts}`).digest('hex');
+        const bufExpected = Buffer.from(expectedHmac);
+        const bufProvided = Buffer.from(providedHmac);
+        if (bufExpected.length !== bufProvided.length || !crypto.timingSafeEqual(bufExpected, bufProvided)) {
+          return res.status(400).json({ error: 'Incorrect math answer. Please try again.' });
+        }
+      }
 
       // 1. Validation & Input Sanitization
       const cleanName = typeof name === 'string' ? name.replace(/<[^>]*>?/gm, '').trim() : '';
@@ -96,8 +143,8 @@ export default async function handler(req, res) {
 
       const cleanEmail = typeof email === 'string' && email.includes('@') ? email.trim() : null;
       if (cleanEmail) {
-        // Per-email rate limit: max 3 reviews per hour per email
-        const allowedEmail = checkRateLimit(`review-submit-email:${cleanEmail}`, 3, 60 * 60 * 1000);
+        // Per-email rate limit: max 5 reviews per hour per email
+        const allowedEmail = checkRateLimit(`review-submit-email:${cleanEmail}`, 5, 60 * 60 * 1000);
         if (!allowedEmail) {
           return res.status(429).json({ error: 'Too many reviews submitted with this email. Please try again later.' });
         }
@@ -137,14 +184,14 @@ export default async function handler(req, res) {
         }
       }
 
-      // 2. Insert into database with approved = false (MODERATION REQUIRED)
+      // 2. Insert into database with approved = true (Auto-published live)
       const id = `rev-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
       const createdAt = new Date().toISOString();
       const attachmentsJson = JSON.stringify(attachments);
 
       await sql`
         INSERT INTO reviews (id, name, email, rating, verdict, body, attachments, approved, created_at)
-        VALUES (${id}, ${cleanName}, ${cleanEmail}, ${numRating}, ${verdict}, ${cleanBody}, ${attachmentsJson}::jsonb, false, ${createdAt});
+        VALUES (${id}, ${cleanName}, ${cleanEmail}, ${numRating}, ${verdict}, ${cleanBody}, ${attachmentsJson}::jsonb, true, ${createdAt});
       `;
 
       // 3. Trigger email notification to Admin with HTML escaping
@@ -178,9 +225,9 @@ export default async function handler(req, res) {
       const mailOptions = {
         from: `"Portfolio Reviews Alert" <${senderEmail}>`,
         to: adminEmail,
-        subject: `[Pending Moderation] New review from ${cleanName} — ${numRating} stars`,
-        text: `New review submitted on your portfolio!\n\n` +
-          `Status: Pending Admin Moderation\n` +
+        subject: `[New Review Live] From ${cleanName} — ${numRating} stars`,
+        text: `New review posted live on your portfolio!\n\n` +
+          `Status: Published Live (Math Verified)\n` +
           `Reviewer: ${cleanName}\n` +
           `Email: ${cleanEmail || 'Not provided'}\n` +
           `Rating: ${numRating} / 5 stars\n` +
@@ -188,12 +235,12 @@ export default async function handler(req, res) {
           `Timestamp (PKT): ${pktTime}\n\n` +
           `Review Text:\n${cleanBody}\n\n` +
           `Attachments:\n${attachmentListText}\n\n` +
-          `Moderate at: ${siteUrl}/reviews\n`,
+          `View at: ${siteUrl}/reviews#${id}\n`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; background: #050f09; color: #f1f5f9; border-radius: 12px; border: 1px solid #10b981;">
-            <h2 style="color: #10b981; margin-top: 0;">✨ New Portfolio Review (Pending Approval)</h2>
+            <h2 style="color: #10b981; margin-top: 0;">✨ New Portfolio Review (Published Live)</h2>
             <div style="background: #0a1e12; border: 1px solid #173822; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
-              <p style="margin: 0 0 8px 0;"><strong>Status:</strong> <span style="background: rgba(245,158,11,0.2); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Pending Approval</span></p>
+              <p style="margin: 0 0 8px 0;"><strong>Status:</strong> <span style="background: rgba(16,185,129,0.2); color: #34d399; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Published Live (Verified)</span></p>
               <p style="margin: 0 0 8px 0;"><strong>Reviewer:</strong> ${escapedName}</p>
               <p style="margin: 0 0 8px 0;"><strong>Email:</strong> ${escapedEmail}</p>
               <p style="margin: 0 0 8px 0;"><strong>Rating:</strong> <span style="color: #f59e0b; font-size: 16px;">${'★'.repeat(numRating)}</span> (${numRating}/5)</p>
@@ -210,8 +257,8 @@ export default async function handler(req, res) {
             ${attachmentListHtml}
 
             <div style="margin-top: 28px; text-align: center;">
-              <a href="${siteUrl}/reviews" style="background: #10b981; color: #ffffff; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 700; display: inline-block;">
-                Moderate in Admin Panel
+              <a href="${siteUrl}/reviews#${id}" style="background: #10b981; color: #ffffff; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 700; display: inline-block;">
+                View Review on Portfolio
               </a>
             </div>
           </div>
@@ -235,9 +282,9 @@ export default async function handler(req, res) {
         verdict,
         body: cleanBody,
         attachments,
-        approved: false,
+        approved: true,
         createdAt,
-        message: 'Review submitted successfully. It will be publicly visible after moderation review.',
+        message: 'Review posted successfully! Thank you for your feedback.',
       });
     } catch (error) {
       console.error('[Reviews POST Error]', error?.message || error);

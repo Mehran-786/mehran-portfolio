@@ -77,17 +77,22 @@ export function getNotifyTransporter() {
 }
 
 export function getReplyTransporter() {
-  const user = process.env.GMAIL_REPLY_USER || 'mehranrasool.sp24@gmail.com';
-  const rawPass = process.env.GMAIL_REPLY_APP_PASSWORD || process.env.GMAIL_REPLY_PASSWORD || process.env.GMAIL_APP_PASSWORD || '';
+  const user = (process.env.GMAIL_REPLY_APP_PASSWORD && process.env.GMAIL_REPLY_USER)
+    ? process.env.GMAIL_REPLY_USER
+    : (process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.GMAIL_REPLY_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com');
+
+  const rawPass = process.env.GMAIL_REPLY_APP_PASSWORD || process.env.GMAIL_NOTIFY_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_REPLY_PASSWORD || process.env.GMAIL_NOTIFY_PASSWORD || process.env.GMAIL_PASSWORD || '';
   const pass = rawPass.replace(/\s+/g, '');
 
-  return nodemailer.createTransport({
+  const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: { user, pass },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
   });
+  transporter.user = user;
+  return transporter;
 }
 
 /**

@@ -97,6 +97,21 @@ export default function ReviewsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Animated Feedback Modal states (replacing static bottom bar)
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isFeedbackClosing, setIsFeedbackClosing] = useState(false);
+
+  // Guest fields for non-authenticated reviewers
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+
+  // Math CAPTCHA Anti-Bot states
+  const [captchaQuestion, setCaptchaQuestion] = useState('');
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [captchaError, setCaptchaError] = useState('');
+  const [captchaLoading, setCaptchaLoading] = useState(false);
+
   // Replying state
   const [replyTargetId, setReplyTargetId] = useState(null);
   const [replyText, setReplyText] = useState("");
@@ -521,6 +536,49 @@ export default function ReviewsPage() {
     setFormAttachments(prev => prev.filter(a => a.id !== id));
   };
 
+  // Fetch Math CAPTCHA question from backend
+  const fetchNewCaptcha = useCallback(async () => {
+    setCaptchaLoading(true);
+    setCaptchaError('');
+    try {
+      const res = await fetch('/api/reviews?action=captcha');
+      if (res.ok) {
+        const data = await res.json();
+        setCaptchaQuestion(data.question);
+        setCaptchaToken(data.token);
+      } else {
+        const n1 = Math.floor(Math.random() * 8) + 2;
+        const n2 = Math.floor(Math.random() * 6) + 1;
+        setCaptchaQuestion(`What is ${n1} + ${n2}?`);
+      }
+    } catch {
+      const n1 = Math.floor(Math.random() * 8) + 2;
+      const n2 = Math.floor(Math.random() * 6) + 1;
+      setCaptchaQuestion(`What is ${n1} + ${n2}?`);
+    } finally {
+      setCaptchaLoading(false);
+    }
+  }, []);
+
+  // Open & Close handlers with scatter/contract animation timing
+  const openFeedbackModal = useCallback(() => {
+    setIsFeedbackClosing(false);
+    setIsFeedbackOpen(true);
+    setCaptchaAnswer('');
+    setCaptchaError('');
+    setFormErrors({});
+    fetchNewCaptcha();
+  }, [fetchNewCaptcha]);
+
+  const closeFeedbackModal = useCallback(() => {
+    if (isFeedbackClosing) return;
+    setIsFeedbackClosing(true);
+    setTimeout(() => {
+      setIsFeedbackOpen(false);
+      setIsFeedbackClosing(false);
+    }, 280);
+  }, [isFeedbackClosing]);
+
   // Submit Review Flow
   const onReviewFormSubmit = (e) => {
     e.preventDefault();
@@ -536,30 +594,48 @@ export default function ReviewsPage() {
       errors.attachments = "Please wait for file uploads to finish.";
     }
 
+    if (!isAdmin && (!captchaAnswer || String(captchaAnswer).trim() === '')) {
+      setCaptchaError("Please solve the anti-bot math verification question.");
+      return;
+    }
+
+    let activeUser = currentUser;
+    if (!activeUser && !isAdmin) {
+      if (!guestName.trim() || guestName.trim().length < 2) {
+        errors.name = "Please enter your name (at least 2 characters).";
+      } else {
+        activeUser = {
+          name: guestName.trim(),
+          email: guestEmail.trim() || '',
+        };
+        setCurrentUser(activeUser);
+        try {
+          localStorage.setItem('mr_review_user', JSON.stringify(activeUser));
+        } catch {}
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
 
-    if (!currentUser && !isAdmin) {
-      setPendingAction('submit_review');
-      setShowAuthModal(true);
-      return;
-    }
-
-    executeReviewSubmit(currentUser);
+    executeReviewSubmit(activeUser);
   };
 
   const executeReviewSubmit = async (user) => {
     setIsSubmitting(true);
+    setCaptchaError('');
     const cleanBody = formBody.replace(/<[^>]*>?/gm, '').trim();
 
     const payload = {
-      name: isAdmin ? "Mehran Rasool" : (user?.name || "Anonymous Reviewer"),
-      email: isAdmin ? "mehranrasool.sp24@gmail.com" : (user?.email || ""),
+      name: isAdmin ? "Mehran Rasool" : (user?.name || guestName || "Anonymous Reviewer"),
+      email: isAdmin ? "mehranrasool.sp24@gmail.com" : (user?.email || guestEmail || ""),
       rating: formRating,
       verdict: formVerdict,
       body: cleanBody,
+      mathAnswer: captchaAnswer,
+      mathToken: captchaToken,
       attachments: formAttachments.map(a => ({
         id: a.id,
         name: a.name,
@@ -579,22 +655,34 @@ export default function ReviewsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data.error && data.error.toLowerCase().includes('math')) {
+          setCaptchaError(data.error);
+          fetchNewCaptcha();
+        }
         throw new Error(data.error || 'Failed to submit review.');
       }
 
       const newReview = data;
-      if (isAdmin) {
-        setReviews(prev => [...prev, newReview]);
-      }
+      setReviews(prev => {
+        const exists = prev.some(r => r.id === newReview.id);
+        if (exists) return prev;
+        return [...prev, newReview];
+      });
+
       setSubmitSuccess(true);
       setFormBody("");
       setFormAttachments([]);
       setFormErrors({});
+      setCaptchaAnswer("");
 
+      // Smoothly contract back into the trigger button and scroll to new review
       setTimeout(() => {
-        setSubmitSuccess(false);
-        threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 1500);
+        closeFeedbackModal();
+        setTimeout(() => {
+          setSubmitSuccess(false);
+          threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+      }, 700);
     } catch (err) {
       console.error('[Submit Review Error]', err);
       setFormErrors(prev => ({ ...prev, body: err.message || 'Submission failed. Please try again.' }));
@@ -961,6 +1049,17 @@ export default function ReviewsPage() {
                   <option value="lowest">Lowest Rated</option>
                 </select>
               </div>
+
+              <button
+                type="button"
+                onClick={openFeedbackModal}
+                className="mr-btn-write-review ml-auto"
+                id="btn-header-leave-feedback"
+              >
+                <span className="text-amber-400">★</span>
+                <span>Leave Feedback</span>
+                <span>✏️</span>
+              </button>
             </div>
           </header>
 
@@ -1173,157 +1272,269 @@ export default function ReviewsPage() {
             <div ref={threadEndRef} />
           </section>
 
-          {/* Fixed Review Submission Composer */}
-          <footer className="mr-composer-wrap" ref={composerRef}>
-            <form onSubmit={onReviewFormSubmit} className="mr-composer-card">
-              <div className="mr-composer-top">
-                <span className="mr-composer-title">Leave Feedback</span>
-                {currentUser && (
-                  <span className="mr-current-user-tag">
-                    Signed in as <strong>{currentUser.name}</strong>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCurrentUser(null);
-                        try { localStorage.removeItem('mr_review_user'); } catch {}
-                      }}
-                      className="ml-2 underline opacity-70 hover:opacity-100"
-                    >
-                      (change)
-                    </button>
-                  </span>
-                )}
-              </div>
+          {/* Floating Action Trigger Button with Stars & Pencil Icon */}
+          <button
+            type="button"
+            onClick={openFeedbackModal}
+            className="mr-feedback-fab"
+            aria-label="Open feedback form"
+            id="btn-leave-feedback-fab"
+          >
+            <span className="mr-fab-stars" aria-hidden="true">✨ ⭐</span>
+            <span className="mr-fab-pencil" aria-hidden="true">✏️</span>
+            <span className="mr-fab-label">Leave Feedback</span>
+          </button>
 
-              {/* Form Controls Row (Project dropdown removed per A1) */}
-              <div className="mr-form-meta-row">
-                {/* Star Rating */}
-                <div className="mr-field">
-                  <label>Star Rating</label>
-                  <div
-                    className="mr-stars-input"
-                    role="radiogroup"
-                    aria-label="Star rating"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'ArrowRight' && formRating < 5) setFormRating(formRating + 1);
-                      if (e.key === 'ArrowLeft' && formRating > 1) setFormRating(formRating - 1);
-                    }}
-                  >
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        type="button"
-                        key={star}
-                        role="radio"
-                        aria-checked={formRating === star}
-                        aria-label={`${star} star`}
-                        onClick={() => setFormRating(star)}
-                        className={`mr-star-btn ${star <= formRating ? 'active' : ''}`}
-                      >
-                        ★
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Quick Verdict */}
-                <div className="mr-field">
-                  <label>Verdict</label>
-                  <div className="mr-verdict-chips" role="radiogroup">
-                    {VERDICTS.map((v) => (
-                      <button
-                        type="button"
-                        key={v}
-                        role="radio"
-                        aria-checked={formVerdict === v}
-                        onClick={() => setFormVerdict(v)}
-                        className={`mr-chip-btn ${formVerdict === v ? 'active' : ''}`}
-                      >
-                        {v}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Review Textarea */}
-              <div className="mr-textarea-wrap">
-                <textarea
-                  value={formBody}
-                  onChange={(e) => setFormBody(e.target.value)}
-                  placeholder="Share your honest feedback on Mehran's applications and systems (10 to 1,000 characters)..."
-                  rows={3}
-                  maxLength={1000}
-                  className="mr-textarea"
-                />
-                <div className="mr-textarea-counter">
-                  {formBody.length} / 1000
-                </div>
-              </div>
-              {formErrors.body && <p className="mr-error-msg">{formErrors.body}</p>}
-
-              {/* Attachments Preview Row with upload progress */}
-              {formAttachments.length > 0 && (
-                <div className="mr-composer-att-previews">
-                  {formAttachments.map((att) => (
-                    <div key={att.id} className="mr-comp-att-pill">
-                      <span>{att.type === 'image' ? '🖼️' : att.type === 'video' ? '🎬' : '📄'} {att.name}</span>
-                      {att.isUploading ? (
-                        <div className="mr-upload-progress-wrap">
-                          <span className="text-xs text-emerald-400 font-mono">{att.uploadProgress}%</span>
-                          <button type="button" onClick={() => removeAttachment(att.id)} className="text-red-400 ml-1 text-xs" title="Cancel upload">✕</button>
-                        </div>
-                      ) : (
-                        <button type="button" onClick={() => removeAttachment(att.id)} aria-label={`Remove ${att.name}`}>✕</button>
-                      )}
+          {/* Animated Feedback Modal with Scatter / Contract Transition */}
+          {isFeedbackOpen && (
+            <div
+              className={`mr-feedback-backdrop ${isFeedbackClosing ? 'closing' : 'opening'}`}
+              onClick={closeFeedbackModal}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="feedback-modal-title"
+            >
+              <div
+                className={`mr-feedback-modal ${isFeedbackClosing ? 'contracting' : 'scattering'}`}
+                onClick={(e) => e.stopPropagation()}
+                ref={composerRef}
+              >
+                <form onSubmit={onReviewFormSubmit}>
+                  {/* Modal Top Header */}
+                  <div className="mr-composer-top">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">⭐ ✏️</span>
+                      <h3 id="feedback-modal-title" className="mr-composer-title">Share Your Feedback</h3>
                     </div>
-                  ))}
-                </div>
-              )}
-              {formErrors.attachments && <p className="mr-error-msg">{formErrors.attachments}</p>}
+                    <div className="flex items-center gap-2">
+                      {currentUser && (
+                        <span className="mr-current-user-tag hidden sm:inline">
+                          Signed in as <strong>{currentUser.name}</strong>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCurrentUser(null);
+                              try { localStorage.removeItem('mr_review_user'); } catch {}
+                            }}
+                            className="ml-1 underline opacity-70 hover:opacity-100 text-xs"
+                          >
+                            (change)
+                          </button>
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={closeFeedbackModal}
+                        className="mr-modal-close-btn"
+                        aria-label="Close feedback modal"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
 
-              {/* Composer Actions Bottom Row */}
-              <div className="mr-composer-actions">
-                <div className="flex items-center gap-3">
-                  {/* Tap-friendly file upload button (F10) */}
-                  <label className="mr-upload-btn" title="Add up to 5 attachments (Images <= 5MB, Video <= 50MB, Docs <= 10MB)">
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,.pdf,.zip,.doc,.docx"
-                    />
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                    <span>Attach Files</span>
-                  </label>
-                  <span className="text-xs opacity-60 hidden sm:inline">Direct Cloudflare R2 Uploads</span>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || formAttachments.some(a => a.isUploading)}
-                  className="mr-submit-btn flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-emerald-300 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                      </svg>
-                      <span>Posting...</span>
-                    </>
-                  ) : submitSuccess ? (
-                    isAdmin ? "✓ Posted!" : "✓ Submitted for Review!"
-                  ) : (
-                    "Post Feedback"
+                  {/* Guest Name & Email if not authenticated */}
+                  {!currentUser && !isAdmin && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider block mb-1 text-slate-300">Your Full Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={guestName}
+                          onChange={(e) => {
+                            setGuestName(e.target.value);
+                            if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }));
+                          }}
+                          placeholder="e.g. Alex Morgan"
+                          className="mr-input w-full"
+                        />
+                        {formErrors.name && <p className="mr-error-msg">{formErrors.name}</p>}
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider block mb-1 text-slate-300">Your Email <span className="opacity-60 text-xs font-normal lowercase">(for reply notification)</span></label>
+                        <input
+                          type="email"
+                          value={guestEmail}
+                          onChange={(e) => setGuestEmail(e.target.value)}
+                          placeholder="e.g. alex@example.com"
+                          className="mr-input w-full"
+                        />
+                      </div>
+                    </div>
                   )}
-                </button>
+
+                  {/* Star Rating & Verdict Controls */}
+                  <div className="mr-form-meta-row">
+                    <div className="mr-field">
+                      <label>Star Rating</label>
+                      <div
+                        className="mr-stars-input"
+                        role="radiogroup"
+                        aria-label="Star rating"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowRight' && formRating < 5) setFormRating(formRating + 1);
+                          if (e.key === 'ArrowLeft' && formRating > 1) setFormRating(formRating - 1);
+                        }}
+                      >
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            type="button"
+                            key={star}
+                            role="radio"
+                            aria-checked={formRating === star}
+                            aria-label={`${star} star`}
+                            onClick={() => setFormRating(star)}
+                            className={`mr-star-btn ${star <= formRating ? 'active' : ''}`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mr-field">
+                      <label>Verdict</label>
+                      <div className="mr-verdict-chips" role="radiogroup">
+                        {VERDICTS.map((v) => (
+                          <button
+                            type="button"
+                            key={v}
+                            role="radio"
+                            aria-checked={formVerdict === v}
+                            onClick={() => setFormVerdict(v)}
+                            className={`mr-chip-btn ${formVerdict === v ? 'active' : ''}`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Review Textarea */}
+                  <div className="mr-textarea-wrap">
+                    <textarea
+                      value={formBody}
+                      onChange={(e) => setFormBody(e.target.value)}
+                      placeholder="Share your honest feedback on Mehran's engineering work, applications, and systems (10 to 1,000 characters)..."
+                      rows={3}
+                      maxLength={1000}
+                      className="mr-textarea"
+                    />
+                    <div className="mr-textarea-counter">
+                      {formBody.length} / 1000
+                    </div>
+                  </div>
+                  {formErrors.body && <p className="mr-error-msg">{formErrors.body}</p>}
+
+                  {/* Anti-Bot Math Challenge */}
+                  {!isAdmin && (
+                    <div className="mr-captcha-box">
+                      <div className="mr-captcha-header">
+                        <span className="mr-captcha-title">🛡️ Anti-Bot Verification</span>
+                        <button
+                          type="button"
+                          onClick={fetchNewCaptcha}
+                          className="mr-captcha-refresh"
+                          title="Get new math question"
+                        >
+                          🔄 New Question
+                        </button>
+                      </div>
+                      <div className="mr-captcha-calc">
+                        <span className="mr-captcha-q">{captchaLoading ? "Loading..." : (captchaQuestion || "What is 7 + 5?")}</span>
+                        <span className="text-emerald-400 font-bold text-lg">=</span>
+                        <input
+                          type="number"
+                          value={captchaAnswer}
+                          onChange={(e) => {
+                            setCaptchaAnswer(e.target.value);
+                            if (captchaError) setCaptchaError('');
+                          }}
+                          placeholder="Answer"
+                          className="mr-captcha-input"
+                          required
+                        />
+                        <span className="text-xs text-slate-400 hidden sm:inline">Solves automated spam so review posts instantly!</span>
+                      </div>
+                      {captchaError && <p className="mr-error-msg mt-1.5">{captchaError}</p>}
+                    </div>
+                  )}
+
+                  {/* Attachments Preview Row with upload progress */}
+                  {formAttachments.length > 0 && (
+                    <div className="mr-composer-att-previews">
+                      {formAttachments.map((att) => (
+                        <div key={att.id} className="mr-comp-att-pill">
+                          <span>{att.type === 'image' ? '🖼️' : att.type === 'video' ? '🎬' : '📄'} {att.name}</span>
+                          {att.isUploading ? (
+                            <div className="mr-upload-progress-wrap">
+                              <span className="text-xs text-emerald-400 font-mono">{att.uploadProgress}%</span>
+                              <button type="button" onClick={() => removeAttachment(att.id)} className="text-red-400 ml-1 text-xs" title="Cancel upload">✕</button>
+                            </div>
+                          ) : (
+                            <button type="button" onClick={() => removeAttachment(att.id)} aria-label={`Remove ${att.name}`}>✕</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {formErrors.attachments && <p className="mr-error-msg">{formErrors.attachments}</p>}
+
+                  {/* Composer Actions Bottom Row */}
+                  <div className="mr-composer-actions pt-2 border-t border-emerald-950/60 mt-3">
+                    <div className="flex items-center gap-3">
+                      <label className="mr-upload-btn" title="Add up to 5 attachments (Images <= 5MB, Video <= 50MB, Docs <= 10MB)">
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,.pdf,.zip,.doc,.docx"
+                        />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        <span>Attach Files</span>
+                      </label>
+                      <span className="text-xs text-slate-400 opacity-80 hidden sm:inline">Images, video, or PDF (up to 5 files)</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={closeFeedbackModal}
+                        className="mr-btn-ghost text-xs py-2 px-3"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || formAttachments.some(a => a.isUploading)}
+                        className="mr-submit-btn flex items-center justify-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-1 h-4 w-4 text-emerald-300 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                            </svg>
+                            <span>Posting...</span>
+                          </>
+                        ) : submitSuccess ? (
+                          "✓ Review Posted Live!"
+                        ) : (
+                          "Post Feedback"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </form>
               </div>
-            </form>
-          </footer>
+            </div>
+          )}
         </main>
 
         {/* Delete Confirmation Modal (A3) */}
@@ -1948,8 +2159,8 @@ const reviewsCss = `
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  margin-bottom: 2rem;
-  scroll-padding-bottom: 12rem; /* F8: safe distance so composer never covers last bubble */
+  margin-bottom: 5rem;
+  scroll-padding-bottom: 6rem;
 }
 
 .mr-message-bubble {
@@ -2184,28 +2395,278 @@ const reviewsCss = `
   cursor: pointer;
 }
 
-/* Composer Fixed Footer with Safe-Area insets (F8, F9) */
-.mr-composer-wrap {
+/* Animated Floating Action Button (FAB) with Stars & Pencil */
+.mr-feedback-fab {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0.75rem clamp(0.75rem, 3vw, 1.5rem) calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 70%, transparent);
-  backdrop-filter: blur(12px);
-  z-index: 40;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1.45rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #059669 0%, #10b981 50%, #047857 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: mrFabFloat 4s ease-in-out infinite;
 }
 
-.mr-composer-card {
-  max-width: 60rem;
-  margin: 0 auto;
+.mr-feedback-fab:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.6), 0 0 0 2px rgba(52, 211, 153, 0.4);
+}
+
+.mr-feedback-fab:active {
+  transform: translateY(0) scale(0.97);
+}
+
+@keyframes mrFabFloat {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+  }
+  50% {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(16, 185, 129, 0.6);
+  }
+}
+
+.mr-fab-stars {
+  font-size: 1.15rem;
+  display: inline-flex;
+  animation: mrStarTwinkle 2.5s ease-in-out infinite;
+}
+
+@keyframes mrStarTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.2) rotate(12deg); opacity: 0.85; filter: drop-shadow(0 0 6px #f59e0b); }
+}
+
+.mr-fab-pencil {
+  font-size: 1.15rem;
+  display: inline-flex;
+  animation: mrPencilWiggle 3s ease-in-out infinite;
+}
+
+@keyframes mrPencilWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  75% { transform: rotate(8deg); }
+}
+
+@media (max-width: 640px) {
+  .mr-feedback-fab {
+    bottom: 1.25rem;
+    right: 1.25rem;
+    padding: 0.75rem 1.15rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Header Trigger Button */
+.mr-btn-write-review {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mr-btn-write-review:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Animated Feedback Modal Backdrop */
+.mr-feedback-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity 0.28s ease;
+}
+
+.mr-feedback-backdrop.opening {
+  opacity: 1;
+}
+
+.mr-feedback-backdrop.closing {
+  opacity: 0;
+}
+
+/* Feedback Modal Panel (originates/scatters from bottom-right FAB) */
+.mr-feedback-modal {
+  position: relative;
+  width: 100%;
+  max-width: 44rem;
+  max-height: 90vh;
+  overflow-y: auto;
   background: var(--rev-panel-bg);
   border: 1px solid var(--rev-panel-border);
-  border-radius: 1rem;
-  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
   backdrop-filter: var(--rev-blur);
   -webkit-backdrop-filter: var(--rev-blur);
-  box-shadow: 0 -0.5rem 2rem rgba(0, 0, 0, 0.4);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(16, 185, 129, 0.15);
+  transform-origin: bottom right;
+}
+
+.mr-feedback-modal.scattering {
+  animation: mrFeedbackScatter 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.mr-feedback-modal.contracting {
+  animation: mrFeedbackContract 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes mrFeedbackScatter {
+  0% {
+    opacity: 0;
+    transform: scale(0.15) translate(120px, 120px) rotate(-6deg);
+    filter: blur(8px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02) translate(-6px, -6px) rotate(1deg);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes mrFeedbackContract {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0) rotate(0deg);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.12) translate(120px, 120px) rotate(-8deg);
+    filter: blur(6px);
+  }
+}
+
+.mr-modal-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  border-radius: 9999px;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.mr-modal-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #f87171;
+  transform: rotate(90deg);
+}
+
+/* Math CAPTCHA Anti-Bot Box */
+.mr-captcha-box {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 0.625rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.mr-captcha-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.mr-captcha-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #34d399;
+}
+
+.mr-captcha-refresh {
+  background: transparent;
+  border: none;
+  color: var(--rev-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.mr-captcha-refresh:hover {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.mr-captcha-calc {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mr-captcha-q {
+  font-family: monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.mr-captcha-input {
+  width: 5.5rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 0.375rem;
+  padding: 0.35rem 0.65rem;
+  color: #f1f5f9;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+
+.mr-captcha-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
 }
 
 .mr-composer-top {

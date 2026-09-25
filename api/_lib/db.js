@@ -52,7 +52,7 @@ export async function initDb() {
     `;
     await sql`ALTER TABLE otp_codes ADD COLUMN IF NOT EXISTS challenge_id TEXT;`;
 
-    // 2. Reviews Table (Defaults to unapproved for moderation)
+    // 2. Reviews Table (Defaults to approved = true for auto-publication)
     await sql`
       CREATE TABLE IF NOT EXISTS reviews (
         id TEXT PRIMARY KEY,
@@ -62,10 +62,14 @@ export async function initDb() {
         verdict TEXT NOT NULL,
         body TEXT NOT NULL,
         attachments JSONB NOT NULL DEFAULT '[]',
-        approved BOOLEAN NOT NULL DEFAULT false,
+        approved BOOLEAN NOT NULL DEFAULT true,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `;
+    try {
+      await sql`ALTER TABLE reviews ALTER COLUMN approved SET DEFAULT true;`;
+      await sql`UPDATE reviews SET approved = true WHERE approved = false;`;
+    } catch {}
 
     // 3. Review Replies Table
     await sql`
