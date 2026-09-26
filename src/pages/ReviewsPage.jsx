@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
@@ -128,6 +128,7 @@ export default function ReviewsPage() {
   const threadEndRef = useRef(null);
   const composerRef = useRef(null);
   const otpInputsRef = useRef([]);
+  const replyInputRef = useRef(null);
 
   // Persist theme
   useEffect(() => {
@@ -182,7 +183,10 @@ export default function ReviewsPage() {
   useEffect(() => {
     const handleViewportResize = () => {
       if (window.visualViewport) {
-        document.documentElement.style.setProperty('--viewport-height', `${window.visualViewport.height}px`);
+        const val = `${window.visualViewport.height}px`;
+        if (document.documentElement.style.getPropertyValue('--viewport-height') !== val) {
+          document.documentElement.style.setProperty('--viewport-height', val);
+        }
       }
     };
     window.visualViewport?.addEventListener('resize', handleViewportResize);
@@ -213,10 +217,12 @@ export default function ReviewsPage() {
     return () => clearInterval(timer);
   }, [showAdminModal, adminStep, otpCountdown]);
 
-  // Auto-scroll to bottom of thread on initial load
+  // Focus reply input once when opened, preventing viewport jump
   useEffect(() => {
-    threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
+    if (replyTargetId && replyInputRef.current) {
+      replyInputRef.current.focus({ preventScroll: true });
+    }
+  }, [replyTargetId]);
 
   // Tri-State Theme Toggle (strictly adhering to rules)
   const handleToggleDark = () => {
@@ -836,54 +842,62 @@ export default function ReviewsPage() {
   }, [deleteModalState.isOpen]);
 
   // Filtering & Sorting (project filter removed)
-  const filteredReviews = reviews
-    .filter(r => (isAdmin ? true : r.approved))
-    .filter(r => filterRating === "ALL" || r.rating === parseInt(filterRating, 10))
-    .filter(r => filterVerdict === "ALL" || r.verdict === filterVerdict)
-    .sort((a, b) => {
-      if (sortBy === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
-      if (sortBy === "oldest") return new Date(a.createdAt) - new Date(b.createdAt);
-      if (sortBy === "highest") return b.rating - a.rating;
-      if (sortBy === "lowest") return a.rating - b.rating;
-      return 0;
+  const filteredReviews = useMemo(() => {
+    return reviews
+      .filter(r => (isAdmin ? true : r.approved))
+      .filter(r => filterRating === "ALL" || r.rating === parseInt(filterRating, 10))
+      .filter(r => filterVerdict === "ALL" || r.verdict === filterVerdict)
+      .sort((a, b) => {
+        if (sortBy === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortBy === "oldest") return new Date(a.createdAt) - new Date(b.createdAt);
+        if (sortBy === "highest") return b.rating - a.rating;
+        if (sortBy === "lowest") return a.rating - b.rating;
+        return 0;
+      });
+  }, [reviews, isAdmin, filterRating, filterVerdict, sortBy]);
+
+  const { totalReviews, avgRating, ratingCounts } = useMemo(() => {
+    const approvedReviews = reviews.filter(r => r.approved);
+    const total = approvedReviews.length;
+    const avg = total > 0
+      ? (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / total).toFixed(1)
+      : "5.0";
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    approvedReviews.forEach(r => {
+      if (counts[r.rating] !== undefined) counts[r.rating]++;
     });
+    return { totalReviews: total, avgRating: avg, ratingCounts: counts };
+  }, [reviews]);
 
-  const totalReviews = reviews.filter(r => r.approved).length;
-  const avgRating = totalReviews > 0
-    ? (reviews.filter(r => r.approved).reduce((acc, r) => acc + r.rating, 0) / totalReviews).toFixed(1)
-    : "5.0";
-
-  const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  reviews.filter(r => r.approved).forEach(r => {
-    if (ratingCounts[r.rating] !== undefined) ratingCounts[r.rating]++;
-  });
-
-  // Dynamic Schema for Reviews
-  const REVIEWS_SCHEMA = totalReviews > 0 ? {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "Engineering Services & Applications by Mehran Rasool",
-    "description": "Client and peer reviews on web development, Flutter apps, and AI security systems built by Mehran Rasool.",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": avgRating,
-      "reviewCount": totalReviews,
-      "bestRating": "5",
-      "worstRating": "1",
-    },
-    "review": reviews.filter(r => r.approved).map(r => ({
-      "@type": "Review",
-      "author": { "@type": "Person", "name": r.name },
-      "datePublished": r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
-      "reviewBody": r.body,
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": r.rating,
+  // Dynamic Schema for Reviews - memoized to prevent re-instantiation on keystrokes
+  const REVIEWS_SCHEMA = useMemo(() => {
+    if (totalReviews === 0) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "Engineering Services & Applications by Mehran Rasool",
+      "description": "Client and peer reviews on web development, Flutter apps, and AI security systems built by Mehran Rasool.",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": avgRating,
+        "reviewCount": totalReviews,
         "bestRating": "5",
         "worstRating": "1",
       },
-    })),
-  } : null;
+      "review": reviews.filter(r => r.approved).map(r => ({
+        "@type": "Review",
+        "author": { "@type": "Person", "name": r.name },
+        "datePublished": r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+        "reviewBody": r.body,
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": r.rating,
+          "bestRating": "5",
+          "worstRating": "1",
+        },
+      })),
+    };
+  }, [totalReviews, avgRating, reviews]);
 
   return (
     <>
@@ -1224,13 +1238,13 @@ export default function ReviewsPage() {
                     {replyTargetId === rev.id ? (
                       <div className="mr-reply-composer">
                         <input
+                          ref={replyInputRef}
                           type="text"
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           placeholder={`Reply to ${rev.name}...`}
                           className="mr-reply-input"
                           maxLength={300}
-                          autoFocus
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleReplySubmit(rev.id);
                           }}

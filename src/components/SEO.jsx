@@ -82,9 +82,6 @@ export default function SEO({
     } else if (scriptEl) {
       scriptEl.remove();
     }
-
-    // Scroll to top when route changes
-    window.scrollTo(0, 0);
   }, [title, description, canonical, ogType, ogImage, ogImageAlt, jsonLd, noindex]);
 
   return null;
