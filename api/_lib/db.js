@@ -71,7 +71,7 @@ export async function initDb() {
       await sql`UPDATE reviews SET approved = true WHERE approved = false;`;
     } catch {}
 
-    // 3. Review Replies Table
+    // 3. Review Replies Table (Supports threaded replies & targeted notifications)
     await sql`
       CREATE TABLE IF NOT EXISTS review_replies (
         id TEXT PRIMARY KEY,
@@ -82,6 +82,13 @@ export async function initDb() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `;
+    try {
+      await sql`ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS parent_reply_id TEXT;`;
+      await sql`ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS reply_to_name TEXT;`;
+      await sql`ALTER TABLE review_replies ADD COLUMN IF NOT EXISTS email TEXT;`;
+    } catch (migErr) {
+      console.warn('[DB Migration Warning review_replies]', migErr?.message || migErr);
+    }
 
     // 4. Admin Credentials Table (Secure in-app secret management)
     await sql`

@@ -54,9 +54,9 @@ export default async function handler(req, res) {
             ORDER BY created_at ASC;
           `;
 
-      // Fetch replies
+      // Fetch replies (includes threaded metadata parent_reply_id and reply_to_name)
       const { rows: replyRows } = await sql`
-        SELECT id, review_id, name, is_owner, body, created_at
+        SELECT id, review_id, name, is_owner, body, parent_reply_id, reply_to_name, created_at
         FROM review_replies
         ORDER BY created_at ASC;
       `;
@@ -70,6 +70,8 @@ export default async function handler(req, res) {
           name: rep.name,
           isOwner: rep.is_owner,
           body: rep.body,
+          parentReplyId: rep.parent_reply_id || null,
+          replyToName: rep.reply_to_name || null,
           createdAt: rep.created_at,
         });
         repliesMap.set(rep.review_id, list);

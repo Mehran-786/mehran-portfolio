@@ -112,8 +112,9 @@ export default function ReviewsPage() {
   const [captchaError, setCaptchaError] = useState('');
   const [captchaLoading, setCaptchaLoading] = useState(false);
 
-  // Replying state
+  // Replying state (Threaded reply support)
   const [replyTargetId, setReplyTargetId] = useState(null);
+  const [replyToParent, setReplyToParent] = useState(null); // { id: string, name: string } | null
   const [replyText, setReplyText] = useState("");
 
   // Filters & Sorting (project filter removed per A1)
@@ -222,7 +223,7 @@ export default function ReviewsPage() {
     if (replyTargetId && replyInputRef.current) {
       replyInputRef.current.focus({ preventScroll: true });
     }
-  }, [replyTargetId]);
+  }, [replyTargetId, replyToParent]);
 
   // Tri-State Theme Toggle (strictly adhering to rules)
   const handleToggleDark = () => {
@@ -255,8 +256,10 @@ export default function ReviewsPage() {
 
     if (pendingAction === 'submit_review') {
       executeReviewSubmit(user);
+    } else if (pendingAction?.reviewId) {
+      executeReplySubmit(pendingAction.reviewId, user, pendingAction.replyToParent);
     } else if (pendingAction) {
-      executeReplySubmit(pendingAction, user);
+      executeReplySubmit(pendingAction, user, replyToParent);
     }
     setPendingAction(null);
   };
@@ -726,8 +729,17 @@ export default function ReviewsPage() {
     }
   };
 
-  // Submit Reply Flow
-  const executeReplySubmit = async (reviewId, user = currentUser) => {
+  // Submit Reply Flow (Supports Threaded Replies & Targeted Notifications)
+  const handleStartReply = (reviewId, parent = null) => {
+    setReplyTargetId(reviewId);
+    setReplyToParent(parent);
+    setReplyText("");
+    setTimeout(() => {
+      replyInputRef.current?.focus({ preventScroll: true });
+    }, 50);
+  };
+
+  const executeReplySubmit = async (reviewId, user = currentUser, parent = replyToParent) => {
     if (!replyText.trim()) return;
 
     const cleanReply = replyText.replace(/<[^>]*>?/gm, '').trim();
@@ -736,6 +748,8 @@ export default function ReviewsPage() {
       email: isAdmin ? "mehranrasool546@gmail.com" : (user?.email || currentUser?.email || ""),
       isOwner: isAdmin,
       body: cleanReply,
+      parentReplyId: parent?.id || null,
+      replyToName: parent?.name || null,
     };
 
     try {
@@ -762,22 +776,23 @@ export default function ReviewsPage() {
 
       setReplyText("");
       setReplyTargetId(null);
+      setReplyToParent(null);
     } catch (err) {
       console.error('[Reply Submit Error]', err);
       alert(err.message || 'Could not post reply. Please try again.');
     }
   };
 
-  const handleReplySubmit = async (reviewId) => {
+  const handleReplySubmit = async (reviewId, parent = replyToParent) => {
     if (!replyText.trim()) return;
 
     if (!currentUser && !isAdmin) {
-      setPendingAction(reviewId);
+      setPendingAction({ reviewId, replyToParent: parent });
       setShowAuthModal(true);
       return;
     }
 
-    executeReplySubmit(reviewId, currentUser);
+    executeReplySubmit(reviewId, currentUser, parent);
   };
 
   // Trigger Delete Modal (A3)
@@ -823,6 +838,15 @@ export default function ReviewsPage() {
         alert(err.message || 'Could not delete review.');
       }
     } else if (deleteModalState.type === 'reply') {
+      try {
+        await fetch(`/api/reviews/${deleteModalState.reviewId}/reply`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ replyId: deleteModalState.replyId }),
+        });
+      } catch (err) {
+        console.error('[Delete Reply Network Error]', err);
+      }
       setReviews(prev => prev.map(r => {
         if (r.id === deleteModalState.reviewId) {
           return {
@@ -1223,12 +1247,19 @@ export default function ReviewsPage() {
                   {rev.replies && rev.replies.length > 0 && (
                     <div className="mr-replies-list">
                       {rev.replies.map(reply => (
-                        <div key={reply.id} className={`mr-reply-bubble ${reply.isOwner ? 'owner' : ''}`}>
+                        <div
+                          key={reply.id}
+                          className={`mr-reply-bubble ${reply.isOwner ? 'owner' : ''} ${reply.parentReplyId ? 'nested' : ''}`}
+                        >
                           <div className="mr-reply-head">
                             <span className="mr-reply-author">
                               {reply.name}
-                              {/* Changed to "Verified" per A2 */}
                               {reply.isOwner && <span className="mr-owner-badge">Verified</span>}
+                              {reply.replyToName && (
+                                <span className="mr-reply-to-tag">
+                                  <span className="opacity-60 text-xs">↳</span> replying to <strong>@{reply.replyToName}</strong>
+                                </span>
+                              )}
                             </span>
                             <div className="flex items-center gap-2">
                               <time className="mr-timestamp">{timeAgo(reply.createdAt)}</time>
@@ -1245,6 +1276,19 @@ export default function ReviewsPage() {
                             </div>
                           </div>
                           <p className="mr-reply-body">{reply.body}</p>
+                          <div className="mr-reply-footer">
+                            <button
+                              type="button"
+                              onClick={() => handleStartReply(rev.id, { id: reply.id, name: reply.name })}
+                              className="mr-btn-reply-child"
+                              title={`Reply to ${reply.name}`}
+                            >
+                              <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                              </svg>
+                              Reply
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1253,41 +1297,57 @@ export default function ReviewsPage() {
                   {/* Reply Action Trigger */}
                   <div className="mr-bubble-footer">
                     {replyTargetId === rev.id ? (
-                      <div className="mr-reply-composer">
-                        <input
-                          ref={replyInputRef}
-                          type="text"
-                          value={replyText}
-                          onChange={(e) => setReplyText(e.target.value)}
-                          placeholder={`Reply to ${rev.name}...`}
-                          className="mr-reply-input"
-                          maxLength={300}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleReplySubmit(rev.id);
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleReplySubmit(rev.id)}
-                          className="mr-btn-send-reply"
-                        >
-                          Send
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setReplyTargetId(null)}
-                          className="mr-btn-ghost text-xs"
-                        >
-                          Cancel
-                        </button>
+                      <div className="mr-reply-composer-wrap">
+                        {replyToParent && (
+                          <div className="mr-reply-target-indicator">
+                            <span>Replying to <strong>@{replyToParent.name}</strong></span>
+                            <button
+                              type="button"
+                              onClick={() => setReplyToParent(null)}
+                              className="mr-btn-cancel-target"
+                              title="Cancel replying to comment and reply to main review"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )}
+                        <div className="mr-reply-composer">
+                          <input
+                            ref={replyInputRef}
+                            type="text"
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder={replyToParent ? `Reply to @${replyToParent.name}...` : `Reply to ${rev.name}...`}
+                            className="mr-reply-input"
+                            maxLength={300}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleReplySubmit(rev.id, replyToParent);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleReplySubmit(rev.id, replyToParent)}
+                            className="mr-btn-send-reply"
+                          >
+                            Send
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReplyTargetId(null);
+                              setReplyToParent(null);
+                              setReplyText("");
+                            }}
+                            className="mr-btn-ghost text-xs"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => {
-                          setReplyTargetId(rev.id);
-                          setReplyText("");
-                        }}
+                        onClick={() => handleStartReply(rev.id, null)}
                         className="mr-btn-reply-action"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2380,6 +2440,95 @@ const reviewsCss = `
   font-size: 0.875rem;
   line-height: 1.55;
   margin: 0;
+}
+
+.mr-reply-bubble.nested {
+  margin-left: 1.25rem;
+  border-left: 2px solid rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.04);
+}
+
+@media (max-width: 640px) {
+  .mr-reply-bubble.nested {
+    margin-left: 0.65rem;
+    padding: 0.6rem 0.75rem;
+  }
+}
+
+.mr-reply-to-tag {
+  font-size: 0.75rem;
+  color: var(--rev-accent);
+  opacity: 0.92;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mr-reply-to-tag strong {
+  font-weight: 700;
+}
+
+.mr-reply-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.mr-btn-reply-child {
+  background: transparent;
+  border: none;
+  color: var(--rev-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.mr-btn-reply-child:hover {
+  color: var(--rev-accent);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.mr-reply-composer-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.mr-reply-target-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  color: #34d399;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.mr-btn-cancel-target {
+  background: transparent;
+  border: none;
+  color: #6ee7b7;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  padding: 0 0.2rem;
+  line-height: 1;
+}
+
+.mr-btn-cancel-target:hover {
+  color: #ffffff;
 }
 
 .mr-btn-reply-action {
