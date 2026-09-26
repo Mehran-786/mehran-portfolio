@@ -141,7 +141,14 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Name must be between 2 and 50 characters.' });
       }
 
-      const cleanEmail = typeof email === 'string' && email.includes('@') ? email.trim() : null;
+      const cleanEmail = typeof email === 'string' && email.includes('@') ? email.trim().toLowerCase() : null;
+      if (!isAdmin) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+          return res.status(400).json({ error: 'Please provide a valid email address so you can receive reply notifications.' });
+        }
+      }
+
       if (cleanEmail) {
         // Per-email rate limit: max 5 reviews per hour per email
         const allowedEmail = checkRateLimit(`review-submit-email:${cleanEmail}`, 5, 60 * 60 * 1000);

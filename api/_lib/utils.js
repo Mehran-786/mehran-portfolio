@@ -77,11 +77,15 @@ export function getNotifyTransporter() {
 }
 
 export function getReplyTransporter() {
-  const user = (process.env.GMAIL_REPLY_APP_PASSWORD && process.env.GMAIL_REPLY_USER)
-    ? process.env.GMAIL_REPLY_USER
-    : (process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.GMAIL_REPLY_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com');
+  const hasReplyAuth = Boolean(process.env.GMAIL_REPLY_USER && (process.env.GMAIL_REPLY_APP_PASSWORD || process.env.GMAIL_REPLY_PASSWORD));
 
-  const rawPass = process.env.GMAIL_REPLY_APP_PASSWORD || process.env.GMAIL_NOTIFY_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_REPLY_PASSWORD || process.env.GMAIL_NOTIFY_PASSWORD || process.env.GMAIL_PASSWORD || '';
+  const user = hasReplyAuth
+    ? process.env.GMAIL_REPLY_USER
+    : (process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com');
+
+  const rawPass = hasReplyAuth
+    ? (process.env.GMAIL_REPLY_APP_PASSWORD || process.env.GMAIL_REPLY_PASSWORD || '')
+    : (process.env.GMAIL_NOTIFY_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_NOTIFY_PASSWORD || process.env.GMAIL_PASSWORD || '');
   const pass = rawPass.replace(/\s+/g, '');
 
   const transporter = nodemailer.createTransport({

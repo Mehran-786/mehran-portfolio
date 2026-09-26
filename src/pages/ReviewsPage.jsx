@@ -255,6 +255,8 @@ export default function ReviewsPage() {
 
     if (pendingAction === 'submit_review') {
       executeReviewSubmit(user);
+    } else if (pendingAction) {
+      executeReplySubmit(pendingAction, user);
     }
     setPendingAction(null);
   };
@@ -609,10 +611,18 @@ export default function ReviewsPage() {
     if (!activeUser && !isAdmin) {
       if (!guestName.trim() || guestName.trim().length < 2) {
         errors.name = "Please enter your name (at least 2 characters).";
-      } else {
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!guestEmail.trim()) {
+        errors.email = "Please enter your email so you receive instant reply notifications.";
+      } else if (!emailRegex.test(guestEmail.trim())) {
+        errors.email = "Please enter a valid email address.";
+      }
+
+      if (!errors.name && !errors.email) {
         activeUser = {
           name: guestName.trim(),
-          email: guestEmail.trim() || '',
+          email: guestEmail.trim().toLowerCase(),
         };
         setCurrentUser(activeUser);
         try {
@@ -717,18 +727,13 @@ export default function ReviewsPage() {
   };
 
   // Submit Reply Flow
-  const handleReplySubmit = async (reviewId) => {
+  const executeReplySubmit = async (reviewId, user = currentUser) => {
     if (!replyText.trim()) return;
-
-    if (!currentUser && !isAdmin) {
-      setPendingAction(reviewId);
-      setShowAuthModal(true);
-      return;
-    }
 
     const cleanReply = replyText.replace(/<[^>]*>?/gm, '').trim();
     const payload = {
-      name: isAdmin ? "Mehran Rasool" : (currentUser?.name || "Community Member"),
+      name: isAdmin ? "Mehran Rasool" : (user?.name || currentUser?.name || "Community Member"),
+      email: isAdmin ? "mehranrasool546@gmail.com" : (user?.email || currentUser?.email || ""),
       isOwner: isAdmin,
       body: cleanReply,
     };
@@ -761,6 +766,18 @@ export default function ReviewsPage() {
       console.error('[Reply Submit Error]', err);
       alert(err.message || 'Could not post reply. Please try again.');
     }
+  };
+
+  const handleReplySubmit = async (reviewId) => {
+    if (!replyText.trim()) return;
+
+    if (!currentUser && !isAdmin) {
+      setPendingAction(reviewId);
+      setShowAuthModal(true);
+      return;
+    }
+
+    executeReplySubmit(reviewId, currentUser);
   };
 
   // Trigger Delete Modal (A3)
@@ -1366,14 +1383,21 @@ export default function ReviewsPage() {
                         {formErrors.name && <p className="mr-error-msg">{formErrors.name}</p>}
                       </div>
                       <div>
-                        <label className="text-xs font-semibold uppercase tracking-wider block mb-1 text-slate-300">Your Email <span className="opacity-60 text-xs font-normal lowercase">(for reply notification)</span></label>
+                        <label className="text-xs font-semibold uppercase tracking-wider block mb-1 text-slate-300">
+                          Your Email * <span className="opacity-75 text-[11px] font-normal text-emerald-400 lowercase">(for reply notification)</span>
+                        </label>
                         <input
                           type="email"
+                          required
                           value={guestEmail}
-                          onChange={(e) => setGuestEmail(e.target.value)}
+                          onChange={(e) => {
+                            setGuestEmail(e.target.value);
+                            if (formErrors.email) setFormErrors(prev => ({ ...prev, email: '' }));
+                          }}
                           placeholder="e.g. alex@example.com"
                           className="mr-input w-full"
                         />
+                        {formErrors.email && <p className="mr-error-msg">{formErrors.email}</p>}
                       </div>
                     </div>
                   )}
