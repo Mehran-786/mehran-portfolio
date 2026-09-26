@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { sql, initDb } from '../../_lib/db.js';
-import { verifyAdminSession, getReplyTransporter, getNotifyTransporter, sendEmailWithRetry, checkRateLimit, validateOrigin } from '../../_lib/utils.js';
+import { verifyAdminSession, sendEmail, checkRateLimit, validateOrigin } from '../../_lib/utils.js';
 
 export default async function handler(req, res) {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
@@ -74,70 +74,30 @@ export default async function handler(req, res) {
       createdAt,
     };
 
-    // Helper for resilient email sending with dual-transporter fallback
-    const deliverEmail = async (mailOpts, logLabel) => {
-      let sent = false;
-      let primaryErr = null;
-      try {
-        const transporter = getReplyTransporter();
-        const result = await sendEmailWithRetry(transporter, mailOpts, 1);
-        if (result?.success) {
-          console.log(`[${logLabel} Email Success] Delivered via primary transporter to ${mailOpts.to} (MessageId: ${result.messageId})`);
-          return true;
-        }
-        primaryErr = result?.error;
-      } catch (err) {
-        primaryErr = err?.message || err;
-      }
+    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').replace(/\/+$/, '');
+    const reviewsUrl = `${siteUrl}/reviews#${reviewId}`;
 
-      console.warn(`[${logLabel} Email Warning] Primary transporter failed (${primaryErr}), trying notify transporter fallback...`);
-
-      try {
-        const fallbackTransporter = getNotifyTransporter();
-        const fallbackSender = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
-        const fallbackOpts = {
-          ...mailOpts,
-          from: `"Mehran Rasool (Portfolio)" <${fallbackSender}>`,
-        };
-        const fbResult = await sendEmailWithRetry(fallbackTransporter, fallbackOpts, 2);
-        if (fbResult?.success) {
-          console.log(`[${logLabel} Email Success] Delivered via fallback transporter to ${mailOpts.to} (MessageId: ${fbResult.messageId})`);
-          return true;
-        }
-        console.error(`[${logLabel} Email Error] Fallback transporter failed for ${mailOpts.to}:`, fbResult?.error);
-      } catch (fbErr) {
-        console.error(`[${logLabel} Email Error] Fallback exception for ${mailOpts.to}:`, fbErr?.message || fbErr);
-      }
-
-      return sent;
-    };
+    const replierTitle = effectiveIsOwner ? 'Mehran Rasool (Portfolio Owner)' : effectiveName;
+    const escapedReplierTitle = (cleanRawName ? `${cleanRawName}${effectiveIsOwner ? ' (Verified Owner)' : ''}` : replierTitle)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapedParentName = (parentReview.name || 'there')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const escapedReplyBody = cleanBody
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const parentSnippet = parentReview.body ? (parentReview.body.slice(0, 160) + (parentReview.body.length > 160 ? '...' : '')) : '';
+    const escapedParentSnippet = parentSnippet
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
     // 1. Send email notification to parent reviewer if they provided an email address
     const targetEmail = typeof parentReview.email === 'string' ? parentReview.email.trim() : '';
     if (targetEmail && targetEmail.includes('@')) {
-      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').replace(/\/+$/, '');
-      const reviewsUrl = `${siteUrl}/reviews#${reviewId}`;
-      const senderEmail = process.env.GMAIL_REPLY_USER || process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
-
-      const replierTitle = effectiveIsOwner ? 'Mehran Rasool (Portfolio Owner)' : effectiveName;
       const emailSubject = effectiveIsOwner
         ? 'Mehran Rasool replied to your review — Portfolio'
         : `New Reply on Your Review from ${effectiveName} — Mehran Rasool's Portfolio`;
 
-      const escapedReplierTitle = (cleanRawName ? `${cleanRawName}${effectiveIsOwner ? ' (Verified Owner)' : ''}` : replierTitle)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      const escapedParentName = (parentReview.name || 'there')
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      const escapedReplyBody = cleanBody
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      const parentSnippet = parentReview.body ? (parentReview.body.slice(0, 160) + (parentReview.body.length > 160 ? '...' : '')) : '';
-      const escapedParentSnippet = parentSnippet
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
       const mailOptions = {
-        from: `"Mehran Rasool (Portfolio)" <${senderEmail}>`,
         to: targetEmail,
-        replyTo: effectiveIsOwner ? (process.env.GMAIL_REPLY_USER || senderEmail) : senderEmail,
+        replyTo: process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com',
         subject: emailSubject,
         text: `Hello ${parentReview.name || 'there'},\n\n` +
           `${effectiveName} has replied to your review on Mehran Rasool's Portfolio.\n\n` +
@@ -165,7 +125,7 @@ export default async function handler(req, res) {
             </div>
 
             ${escapedParentSnippet ? `
-              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px 16px; margin-bottom: 24px;">
                 <p style="margin: 0; color: #64748b; font-size: 12px;">In response to your review:</p>
                 <p style="margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; font-style: italic;">"${escapedParentSnippet}"</p>
               </div>
@@ -184,7 +144,7 @@ export default async function handler(req, res) {
         `,
       };
 
-      await deliverEmail(mailOptions, 'Client Reply Notification');
+      await sendEmail(mailOptions);
     } else {
       console.warn(`[Reply Email Notice] Cannot notify author of review #${reviewId}: no valid email address on file.`);
     }
@@ -192,18 +152,30 @@ export default async function handler(req, res) {
     // 2. If a community member replied (not owner), also notify Mehran so he is informed
     if (!effectiveIsOwner) {
       const adminEmail = process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
-      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://mehranrasool.me').replace(/\/+$/, '');
-      const reviewsUrl = `${siteUrl}/reviews#${reviewId}`;
-      const senderEmail = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
 
       const adminMailOptions = {
-        from: `"Portfolio Activity Alert" <${senderEmail}>`,
         to: adminEmail,
         subject: `[New Reply] ${effectiveName} replied on review #${reviewId}`,
         text: `Hello Mehran,\n\n${effectiveName} has posted a reply on review #${reviewId} (by ${parentReview.name || 'a client'}):\n\n"${cleanBody}"\n\nView at: ${reviewsUrl}\n`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; background: #050f09; color: #f1f5f9; border-radius: 12px; border: 1px solid #10b981;">
+            <h2 style="color: #10b981; margin-top: 0;">💬 New Reply on Your Portfolio</h2>
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5;">
+              <strong>${escapedReplierTitle}</strong> replied to review by <strong>${escapedParentName}</strong>:
+            </p>
+            <div style="background: #0a1e12; border-left: 3px solid #10b981; padding: 14px 18px; border-radius: 6px; margin: 16px 0;">
+              <p style="margin: 0; color: #f8fafc; font-size: 14px; white-space: pre-wrap;">"${escapedReplyBody}"</p>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+              <a href="${reviewsUrl}" style="background: #10b981; color: #041209; padding: 10px 24px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 13px; display: inline-block;">
+                View on Portfolio →
+              </a>
+            </div>
+          </div>
+        `,
       };
 
-      await deliverEmail(adminMailOptions, 'Admin Reply Alert');
+      await sendEmail(adminMailOptions);
     }
 
     return res.status(201).json(createdReply);

@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { sql, initDb } from '../_lib/db.js';
-import { getNotifyTransporter, sendEmailWithRetry, checkRateLimit, escapeHtml, verifyAdminSession, validateOrigin } from '../_lib/utils.js';
+import { sendEmail, checkRateLimit, escapeHtml, verifyAdminSession, validateOrigin } from '../_lib/utils.js';
 
 const ALLOWED_VERDICTS = ["Excellent", "Good", "Average", "Needs work"];
 const ATTACHMENT_KEY_REGEX = /^reviews\/[a-zA-Z0-9-_]+\/[a-f0-9-]+\.[a-z0-9]+$/;
@@ -227,10 +227,7 @@ export default async function handler(req, res) {
           </ul>`
         : '<p style="color: #94a3b8; margin: 4px 0;">None</p>';
 
-      const senderEmail = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || 'mehranrasool546@gmail.com';
-      const transporter = getNotifyTransporter();
       const mailOptions = {
-        from: `"Portfolio Reviews Alert" <${senderEmail}>`,
         to: adminEmail,
         subject: `[New Review Live] From ${cleanName} — ${numRating} stars`,
         text: `New review posted live on your portfolio!\n\n` +
@@ -273,7 +270,7 @@ export default async function handler(req, res) {
       };
 
       try {
-        const mailResult = await sendEmailWithRetry(transporter, mailOptions);
+        const mailResult = await sendEmail(mailOptions);
         if (!mailResult.success) {
           console.warn('[Review Alert Email Warning]', mailResult.error);
         }

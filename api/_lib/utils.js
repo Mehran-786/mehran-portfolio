@@ -1,6 +1,10 @@
 import { S3Client } from '@aws-sdk/client-s3';
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import crypto from 'crypto';
+
+// Authenticated sender email on Resend (mehranrasool.me)
+export const DEFAULT_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Mehran Rasool <notifications@mehranrasool.me>';
 
 // Rate limiter store for serverless lifecycle (persists across warm invocations)
 export const rateLimitStore = global.__RATE_LIMIT_STORE__ || (global.__RATE_LIMIT_STORE__ = new Map());
@@ -60,7 +64,64 @@ export function getR2Client() {
 }
 
 /**
- * Gmail Transporters
+ * Send email using Resend API (Official SDK) with Nodemailer SMTP fallback
+ * @param {{ to: string | string[], subject: string, html: string, text: string, replyTo?: string, from?: string }} options
+ * @returns {Promise<{ success: boolean, messageId?: string, error?: string }>}
+ */
+export async function sendEmail({ to, subject, html, text, replyTo, from }) {
+  const sender = from || DEFAULT_FROM_EMAIL;
+  const replyAddress = replyTo || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
+  const recipients = Array.isArray(to) ? to : [to];
+
+  // 1. Primary: Official Resend SDK
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    try {
+      const resend = new Resend(resendApiKey);
+      const { data, error } = await resend.emails.send({
+        from: sender,
+        to: recipients,
+        subject,
+        html,
+        text,
+        reply_to: replyAddress,
+      });
+
+      if (error) {
+        console.error('[Resend Error]', error);
+      } else if (data?.id) {
+        console.log(`[Resend Success] Email delivered to ${recipients.join(', ')} (ID: ${data.id})`);
+        return { success: true, messageId: data.id };
+      }
+    } catch (resendErr) {
+      console.error('[Resend Exception]', resendErr?.message || resendErr);
+    }
+  } else {
+    console.warn('[Email Notice] RESEND_API_KEY is not set. Falling back to SMTP...');
+  }
+
+  // 2. Secondary Fallback: Gmail / SMTP transporter if Resend fails or key not set
+  try {
+    const transporter = getNotifyTransporter();
+    const fallbackUser = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
+    const info = await transporter.sendMail({
+      from: `"Mehran Rasool" <${fallbackUser}>`,
+      to: recipients.join(', '),
+      subject,
+      html,
+      text,
+      replyTo: replyAddress,
+    });
+    console.log(`[SMTP Fallback Success] Delivered to ${recipients.join(', ')} (MessageId: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (smtpErr) {
+    console.error('[Email Delivery Failed via both Resend and SMTP]', smtpErr?.message || smtpErr);
+    return { success: false, error: smtpErr?.message || 'Email delivery failed' };
+  }
+}
+
+/**
+ * Gmail Transporters (Retained for SMTP fallback)
  */
 export function getNotifyTransporter() {
   const user = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';

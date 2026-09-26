@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getNotifyTransporter, sendEmailWithRetry, checkRateLimit, timingSafeCompare, verifyAdminSession, validateOrigin } from '../_lib/utils.js';
+import { sendEmail, checkRateLimit, timingSafeCompare, verifyAdminSession, validateOrigin } from '../_lib/utils.js';
 import { sql, initDb } from '../_lib/db.js';
 
 export default async function handler(req, res) {
@@ -81,13 +81,10 @@ async function handleOtpRequest(req, res) {
     `;
 
     const adminEmail = process.env.ADMIN_EMAIL || 'mehranrasool546@gmail.com';
-    const senderEmail = process.env.GMAIL_NOTIFY_USER || process.env.GMAIL_USER || 'mehranrasool546@gmail.com';
-    const transporter = getNotifyTransporter();
 
-    const mailOptions = {
-      from: `"Mehran Portfolio Security" <${senderEmail}>`,
+    const mailResult = await sendEmail({
       to: adminEmail,
-      subject: 'Your login code',
+      subject: 'Your Admin Login Code — Mehran Rasool Portfolio',
       text: `Your single-use login code is: ${otp}\n\nThis code expires in 5 minutes.\nRequesting IP: ${ip}\n\nIf you did not request this login code, someone may have your secret ID. Please review your credentials immediately.`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #050f09; color: #f1f5f9; border-radius: 12px; border: 1px solid #10b981;">
@@ -102,13 +99,12 @@ async function handleOtpRequest(req, res) {
           </p>
         </div>
       `,
-    };
+    });
 
-    const mailResult = await sendEmailWithRetry(transporter, mailOptions);
     if (!mailResult.success) {
       console.error('[OTP Email Error]', mailResult.error);
       return res.status(500).json({ 
-        error: `Could not send verification email: ${mailResult.error}. Please check your Gmail App Password in Vercel settings.` 
+        error: `Could not send verification email: ${mailResult.error}. Please check your Resend API configuration in Vercel settings.` 
       });
     }
 
