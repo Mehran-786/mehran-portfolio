@@ -49,7 +49,7 @@ async function handlePresign(req, res) {
   }
 
   try {
-    const { filename, mimeType, fileSize, reviewId = 'draft' } = req.body || {};
+    const { filename, mimeType, fileSize, reviewId = 'draft', projectId, folder = 'reviews' } = req.body || {};
 
     if (!filename || !mimeType || !fileSize) {
       return res.status(400).json({ error: 'Missing required file metadata (filename, mimeType, fileSize).' });
@@ -66,15 +66,26 @@ async function handlePresign(req, res) {
       return res.status(400).json({ error: `Declared file type does not match extension .${ext}.` });
     }
 
-    if (fileSize > config.maxSize) {
-      const maxMb = config.maxSize / (1024 * 1024);
+    const isAdmin = verifyAdminSession(req);
+    let maxSize = config.maxSize;
+    if (isAdmin) {
+      if (config.type === 'video') maxSize = 100 * 1024 * 1024; // 100MB for admin videos
+      else if (config.type === 'image') maxSize = 15 * 1024 * 1024; // 15MB for admin images
+      else if (config.type === 'file') maxSize = 25 * 1024 * 1024; // 25MB for admin PDFs/docs
+    }
+
+    if (fileSize > maxSize) {
+      const maxMb = Math.round(maxSize / (1024 * 1024));
       return res.status(400).json({ error: `File exceeds maximum allowed size of ${maxMb}MB for this file type.` });
     }
 
     const uuid = crypto.randomUUID();
-    const rawReviewId = typeof reviewId === 'string' ? reviewId.replace(/[^a-zA-Z0-9-_]/g, '') : '';
-    const safeReviewId = rawReviewId && rawReviewId.length <= 64 ? rawReviewId : `draft-${crypto.randomBytes(4).toString('hex')}`;
-    const objectKey = `reviews/${safeReviewId}/${uuid}.${ext}`;
+    const targetFolder = folder === 'projects' ? 'projects' : 'reviews';
+    const rawId = (folder === 'projects' ? projectId : reviewId) || 'draft';
+    const safeId = typeof rawId === 'string'
+      ? rawId.replace(/[^a-zA-Z0-9-_]/g, '').slice(0, 64) || `item-${crypto.randomBytes(3).toString('hex')}`
+      : `item-${crypto.randomBytes(3).toString('hex')}`;
+    const objectKey = `${targetFolder}/${safeId}/${uuid}.${ext}`;
 
     const r2 = getR2Client();
     const bucket = process.env.R2_BUCKET_NAME || 'mehranrasool-reviews';

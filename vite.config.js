@@ -78,6 +78,18 @@ function apiDevMiddleware() {
           filePath = './api/reviews/index.js';
         }
 
+        // /api/projects/:id -> ./api/projects/[id].js
+        const projectItemMatch = cleanUrl.match(/^projects\/([^/]+)$/);
+        if (projectItemMatch) {
+          filePath = './api/projects/[id].js';
+          queryParams.id = projectItemMatch[1];
+        }
+
+        // /api/projects -> ./api/projects/index.js
+        if (cleanUrl === 'projects') {
+          filePath = './api/projects/index.js';
+        }
+
         req.query = { ...queryParams, ...(req.query || {}) };
 
         let rawBody = '';

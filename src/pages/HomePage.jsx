@@ -5,7 +5,7 @@ import Hero from '../components/Hero';
 import About from '../components/About';
 import TechnicalSkills from '../components/TechnicalSkills';
 import Services from '../components/Services';
-import Projects from '../components/Projects';
+import ProjectsTeaser from '../components/ProjectsTeaser';
 import ContentCreator from '../components/ContentCreator';
 import Internships from '../components/Internships';
 import Leadership from '../components/Leadership';
@@ -108,7 +108,7 @@ export default function HomePage() {
       <About />
       <TechnicalSkills />
       <Services />
-      <Projects />
+      <ProjectsTeaser />
       <ContentCreator />
       <Internships />
       <Leadership />

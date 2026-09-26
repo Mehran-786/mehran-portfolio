@@ -162,72 +162,7 @@ export default function ProjectsPage() {
             Production web applications, cross-platform Flutter apps, secure LLM gateways, and systems engineered for high throughput, security, and real users.
           </p>
 
-          {/* Project Comparison Matrix */}
-          <div className="mt-8 mb-4">
-            <h2 className="text-lg md:text-xl font-bold text-white mb-2">
-              Engineering Comparison Matrix
-            </h2>
-            <p className="mr-project-summary text-xs md:text-sm text-slate-400 mb-4">
-              Side-by-side comparison of technical architecture, design patterns, and verified operational benchmarks across major projects.
-            </p>
 
-            <div
-              className="overflow-x-auto rounded-xl border border-emerald-500/20 bg-[#0a1910] focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              style={{ WebkitOverflowScrolling: 'touch' }}
-              tabIndex={0}
-              role="region"
-              aria-label="Project Engineering Comparison Matrix"
-            >
-              <table className="w-full border-collapse text-left text-xs md:text-sm min-w-[720px]">
-                <thead>
-                  <tr className="bg-emerald-950/40 border-b border-emerald-500/20 text-emerald-300 uppercase tracking-wider text-[11px]">
-                    <th scope="col" className="py-3 px-4">Project</th>
-                    <th scope="col" className="py-3 px-4">Domain / Layer</th>
-                    <th scope="col" className="py-3 px-4">Core Stack</th>
-                    <th scope="col" className="py-3 px-4">Architectural Highlights</th>
-                    <th scope="col" className="py-3 px-4">Verified Metrics</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-emerald-950 text-slate-300">
-                  <tr className="hover:bg-emerald-900/10 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-white">Secure LLM Gateway</td>
-                    <td className="py-3.5 px-4"><span className="inline-block px-2 py-0.5 rounded text-[11px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">AI / LLM Defense</span></td>
-                    <td className="py-3.5 px-4">Python, FastAPI, Presidio, scikit-learn, Groq</td>
-                    <td className="py-3.5 px-4">5-stage hybrid pipeline: deep-translator normalization, TF-IDF + Logistic Regression classifier, custom CNIC/API key PII recognizers</td>
-                    <td className="py-3.5 px-4 font-mono text-emerald-400">82.7% accuracy, 100% PII recall, 525ms latency</td>
-                  </tr>
-                  <tr className="hover:bg-emerald-900/10 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-white">DownSocial Downloader</td>
-                    <td className="py-3.5 px-4"><span className="inline-block px-2 py-0.5 rounded text-[11px] bg-blue-500/15 text-blue-300 border border-blue-500/30">Web &amp; Media Service</span></td>
-                    <td className="py-3.5 px-4">Python, Flask, React, Gunicorn, Nginx, Linux</td>
-                    <td className="py-3.5 px-4">Cloudflare edge caching, IP rate limiting, multi-format media extraction daemon behind reverse proxy</td>
-                    <td className="py-3.5 px-4 font-mono text-blue-300">Production deployed, high concurrent throughput</td>
-                  </tr>
-                  <tr className="hover:bg-emerald-900/10 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-white">YT VISION Analytics</td>
-                    <td className="py-3.5 px-4"><span className="inline-block px-2 py-0.5 rounded text-[11px] bg-purple-500/15 text-purple-300 border border-purple-500/30">Analytics &amp; Extension</span></td>
-                    <td className="py-3.5 px-4">FastAPI, React, Vite, TypeScript, Chrome API</td>
-                    <td className="py-3.5 px-4">Multi-engine architecture (SEO + Engagement Engine), SOLID principles, shared Pydantic contracts across 8-stage pipeline</td>
-                    <td className="py-3.5 px-4 font-mono text-purple-300">Sub-second multi-metric scoring</td>
-                  </tr>
-                  <tr className="hover:bg-emerald-900/10 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-white">2D Dungeon Crawler RPG</td>
-                    <td className="py-3.5 px-4"><span className="inline-block px-2 py-0.5 rounded text-[11px] bg-amber-500/15 text-amber-300 border border-amber-500/30">Game Engine &amp; Systems</span></td>
-                    <td className="py-3.5 px-4">C++, SFML</td>
-                    <td className="py-3.5 px-4">Multi-file OOP architecture, deterministic memory management, particle system engine, state-machine boss AI</td>
-                    <td className="py-3.5 px-4 font-mono text-amber-300">Steady 60 FPS rendering, zero GC jitter</td>
-                  </tr>
-                  <tr className="hover:bg-emerald-900/10 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-white">Real Estate System</td>
-                    <td className="py-3.5 px-4"><span className="inline-block px-2 py-0.5 rounded text-[11px] bg-amber-500/15 text-amber-300 border border-amber-500/30">Desktop Application</span></td>
-                    <td className="py-3.5 px-4">Java, Swing, JDBC, SQL</td>
-                    <td className="py-3.5 px-4">MVC architecture, role-based admin controls, persistent database schemas, relational transaction logs</td>
-                    <td className="py-3.5 px-4 font-mono text-slate-400">ACID property transactions</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
         </header>
 
         <Projects />
