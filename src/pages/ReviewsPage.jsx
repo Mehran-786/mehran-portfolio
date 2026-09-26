@@ -874,7 +874,7 @@ export default function ReviewsPage() {
     "review": reviews.filter(r => r.approved).map(r => ({
       "@type": "Review",
       "author": { "@type": "Person", "name": r.name },
-      "datePublished": r.createdAt.split('T')[0],
+      "datePublished": r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
       "reviewBody": r.body,
       "reviewRating": {
         "@type": "Rating",

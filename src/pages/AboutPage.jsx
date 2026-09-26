@@ -72,8 +72,8 @@ const getAboutSchemas = () => {
     description:
       "About Mehran Rasool — full-stack developer specializing in web development, web application development, and Flutter mobile app development, with applied AI and LLM security engineering.",
     mainEntity: { "@id": personId },
-    datePublished: "2024-01-15",
-    dateModified: "2026-09-20",
+    datePublished: "2024-01-15T00:00:00Z",
+    dateModified: "2026-09-26T00:00:00Z",
     speakable: {
       "@type": "SpeakableSpecification",
       cssSelector: [".mr-lede", ".mr-summary"]

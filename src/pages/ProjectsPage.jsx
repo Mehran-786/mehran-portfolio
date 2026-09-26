@@ -20,8 +20,8 @@ const getProjectsSchemas = () => {
       "author": { "@id": personId },
       "programmingLanguage": ["Python", "FastAPI"],
       "codeRepository": "https://github.com/Mehran-786",
-      "datePublished": "2024-02-10",
-      "dateModified": "2026-09-20"
+      "datePublished": "2024-02-10T00:00:00Z",
+      "dateModified": "2026-09-26T00:00:00Z"
     },
     {
       "@context": "https://schema.org",
@@ -34,8 +34,8 @@ const getProjectsSchemas = () => {
       "programmingLanguage": ["Python", "Flask", "JavaScript", "React"],
       "codeRepository": "https://github.com/Mehran-786",
       "url": `${siteUrl}/projects#tool-website`,
-      "datePublished": "2023-11-20",
-      "dateModified": "2026-09-20"
+      "datePublished": "2023-11-20T00:00:00Z",
+      "dateModified": "2026-09-26T00:00:00Z"
     },
     {
       "@context": "https://schema.org",
@@ -47,8 +47,8 @@ const getProjectsSchemas = () => {
       "author": { "@id": personId },
       "programmingLanguage": ["Python", "FastAPI", "React", "TypeScript"],
       "codeRepository": "https://github.com/Mehran-786",
-      "datePublished": "2024-05-15",
-      "dateModified": "2026-09-20"
+      "datePublished": "2024-05-15T00:00:00Z",
+      "dateModified": "2026-09-26T00:00:00Z"
     },
     {
       "@context": "https://schema.org",
@@ -60,8 +60,8 @@ const getProjectsSchemas = () => {
       "author": { "@id": personId },
       "programmingLanguage": ["C++"],
       "codeRepository": "https://github.com/Mehran-786",
-      "datePublished": "2023-08-10",
-      "dateModified": "2026-09-20"
+      "datePublished": "2023-08-10T00:00:00Z",
+      "dateModified": "2026-09-26T00:00:00Z"
     },
     {
       "@context": "https://schema.org",
@@ -73,8 +73,8 @@ const getProjectsSchemas = () => {
       "author": { "@id": personId },
       "programmingLanguage": ["Python", "Cryptography"],
       "codeRepository": "https://github.com/Mehran-786",
-      "datePublished": "2024-03-10",
-      "dateModified": "2026-09-20"
+      "datePublished": "2024-03-10T00:00:00Z",
+      "dateModified": "2026-09-26T00:00:00Z"
     }
   ];
 

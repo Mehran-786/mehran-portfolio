@@ -284,6 +284,8 @@ const pages = [
       '@type': 'ProfilePage',
       'name': 'About Mehran Rasool — Full-Stack Developer',
       'url': `${siteUrl}/about`,
+      'datePublished': '2024-01-15T00:00:00Z',
+      'dateModified': '2026-09-26T00:00:00Z',
       'mainEntity': {
         '@type': 'Person',
         '@id': personId,
