@@ -3216,4 +3216,70 @@ const reviewsCss = `
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 1rem;
 }
+
+/* Light Mode Overrides for Crisp High-Contrast Text & Inputs */
+.mr-reviews-root[data-theme="light"] .mr-textarea {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #0f172a;
+}
+.mr-reviews-root[data-theme="light"] .mr-reply-input {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #0f172a;
+}
+.mr-reviews-root[data-theme="light"] .mr-select {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #0f172a;
+}
+.mr-reviews-root[data-theme="light"] .mr-captcha-q {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.mr-reviews-root[data-theme="light"] .mr-captcha-input {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.mr-reviews-root[data-theme="light"] .mr-upload-btn {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #065f46;
+}
+.mr-reviews-root[data-theme="light"] .mr-reply-bubble.owner {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+.mr-reviews-root[data-theme="light"] .mr-feedback-modal,
+.mr-reviews-root[data-theme="light"] .mr-modal {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #0f172a;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+.mr-reviews-root[data-theme="light"] .mr-input {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #0f172a;
+}
+.mr-reviews-root[data-theme="light"] .mr-chip-btn {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #334155;
+}
+.mr-reviews-root[data-theme="light"] .mr-chip-btn.active {
+  background: #ecfdf5;
+  border-color: #059669;
+  color: #047857;
+}
+.mr-reviews-root[data-theme="light"] .mr-btn-reply-action {
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #047857;
+}
+.mr-reviews-root[data-theme="light"] .mr-btn-ghost {
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #047857;
+}
 `;

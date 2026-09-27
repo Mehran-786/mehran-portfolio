@@ -154,7 +154,7 @@ export default function AboutPage() {
           <header className="mr-intro">
             <p className="mr-kicker">About</p>
             <h1>About Mehran Rasool — Full-Stack Developer</h1>
-            <p className="text-xl md:text-2xl text-emerald-300 font-semibold mt-3 mb-4 leading-snug">
+            <p className="mr-intro-sub text-xl md:text-2xl font-semibold mt-3 mb-4 leading-snug">
               I build software that ships — web, mobile, and the AI layer in
               between.
             </p>
@@ -522,25 +522,185 @@ const aboutCss = `
   --mr-bg: #f0fdf4;
   --mr-surface: #ffffff;
   --mr-line: rgba(16, 185, 129, 0.25);
-  --mr-text: #064e3b;
-  --mr-muted: #047857;
+  --mr-text: #0f172a;
+  --mr-muted: #475569;
   --mr-accent: #059669;
   --mr-accent-glow: rgba(5, 150, 105, 0.2);
 }
-[data-theme="light"] .mr-about-page h1,
+[data-theme="light"] .mr-about-page h1 {
+  color: #064e3b;
+}
 [data-theme="light"] .mr-about-page h2 {
   color: #064e3b;
+  border-bottom-color: rgba(16, 185, 129, 0.25);
+}
+[data-theme="light"] .mr-about-page h3 {
+  color: #047857;
 }
 [data-theme="light"] .mr-about-page p,
 [data-theme="light"] .mr-about-page .mr-lede {
   color: #1e293b;
 }
+[data-theme="light"] .mr-about-page .mr-summary {
+  color: #475569;
+}
+[data-theme="light"] .mr-about-page .mr-intro-sub {
+  color: #047857;
+}
+[data-theme="light"] .mr-byline-bar {
+  color: #64748b;
+  border-bottom-color: rgba(16, 185, 129, 0.25);
+}
+[data-theme="light"] .mr-author-link {
+  color: #059669;
+}
+[data-theme="light"] .mr-author-link:hover {
+  color: #047857;
+}
+[data-theme="light"] .mr-dot {
+  color: #94a3b8;
+}
 [data-theme="light"] .mr-about-page .mr-practice {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(16, 185, 129, 0.3);
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+[data-theme="light"] .mr-about-page .mr-practice h3 {
+  color: #047857;
+}
+[data-theme="light"] .mr-about-page .mr-practice p {
+  color: #334155;
+}
+[data-theme="light"] .mr-spec {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+[data-theme="light"] .mr-spec > div {
+  background: #ffffff;
+}
+[data-theme="light"] .mr-spec dt {
+  color: #059669;
 }
 [data-theme="light"] .mr-spec dd {
-  color: #064e3b;
+  color: #0f172a;
+}
+
+/* Table Wrapper & Matrix Table in Light Mode */
+[data-theme="light"] .mr-table-wrapper {
+  background: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] .mr-matrix-table th {
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 800;
+  border-bottom: 2px solid rgba(16, 185, 129, 0.35);
+}
+[data-theme="light"] .mr-matrix-table td {
+  color: #1e293b;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.18);
+  font-weight: 500;
+}
+[data-theme="light"] .mr-matrix-table td strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+[data-theme="light"] .mr-matrix-table tbody tr:hover {
+  background: #f0fdf4;
+}
+[data-theme="light"] .mr-tag-fe {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  font-weight: 700;
+}
+[data-theme="light"] .mr-tag-mb {
+  background: #faf5ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+  font-weight: 700;
+}
+[data-theme="light"] .mr-tag-be {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-weight: 700;
+}
+[data-theme="light"] .mr-tag-sys {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-weight: 700;
+}
+
+/* Stack Cards in Light Mode */
+[data-theme="light"] .mr-stack > div {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+[data-theme="light"] .mr-stack h4 {
+  color: #047857;
+  font-weight: 800;
+}
+[data-theme="light"] .mr-stack p {
+  color: #1e293b;
+  font-weight: 500;
+}
+
+/* Technical Glossary in Light Mode */
+[data-theme="light"] .mr-glossary-item {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+[data-theme="light"] .mr-glossary-item dt {
+  color: #065f46;
+  font-weight: 800;
+}
+[data-theme="light"] .mr-glossary-item dd {
+  color: #334155;
+  line-height: 1.65;
+}
+
+/* FAQ in Light Mode */
+[data-theme="light"] .mr-faq-item {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+[data-theme="light"] .mr-faq-item h3 {
+  color: #0f172a;
+  font-weight: 800;
+}
+[data-theme="light"] .mr-faq-item p {
+  color: #334155;
+}
+
+/* Contact Buttons in Light Mode */
+[data-theme="light"] .mr-links a {
+  background: #ffffff;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #065f46;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] .mr-links a:hover {
+  background: #ecfdf5;
+  border-color: #059669;
+  color: #047857;
+}
+[data-theme="light"] .mr-links a.mr-btn-primary {
+  background: linear-gradient(135deg, #059669, #047857);
+  border-color: #059669;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.mr-intro-sub {
+  color: #6ee7b7;
 }
 
 .mr-about-container {

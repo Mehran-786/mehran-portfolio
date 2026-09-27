@@ -38,6 +38,12 @@ body {
   min-height: 100dvh;
 }
 
+[data-theme="light"] body,
+html[data-theme="light"] body {
+  background-color: #f0fdf4;
+  color: #0f172a;
+}
+
 /* WCAG 1.4.4 & 1.4.10 Zoom and Reflow Resilience */
 *, *::before, *::after {
   box-sizing: border-box;
