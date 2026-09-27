@@ -43,9 +43,10 @@ async function handlePresign(req, res) {
 
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
 
-  const allowed = checkRateLimit(`presign:${ip}`, 20, 60 * 60 * 1000);
+  const maxUploads = 100;
+  const allowed = checkRateLimit(`presign:${ip}`, maxUploads, 60 * 60 * 1000);
   if (!allowed) {
-    return res.status(429).json({ error: 'Rate limit exceeded: maximum 20 upload requests per hour.' });
+    return res.status(429).json({ error: `Rate limit exceeded: maximum ${maxUploads} upload requests per hour.` });
   }
 
   try {

@@ -526,20 +526,20 @@ export default function Projects() {
     return staticScreenshotsMap[p.id] || [];
   };
 
-  const getProjectVideo = (p) => {
+  const getProjectVideos = (p) => {
+    let list = [];
     if (Array.isArray(p.media)) {
-      const vid = p.media.find(m => m.type === 'video' && m.url);
-      if (vid) {
-        return {
-          ...vid,
-          url: resolveAssetUrl(vid.url),
-        };
-      }
+      list = p.media
+        .filter(m => m.type === 'video' && m.url)
+        .map(m => ({
+          ...m,
+          url: resolveAssetUrl(m.url),
+        }));
     }
-    if (p.id === 'secure-llm-gateway') {
-      return { url: aiDemoVideo, title: 'Live AI Gateway Video Demo', desc: '1080p HD' };
+    if (list.length === 0 && p.id === 'secure-llm-gateway') {
+      return [{ url: aiDemoVideo, title: 'Live AI Gateway Video Demo', desc: '1080p HD' }];
     }
-    return null;
+    return list;
   };
 
   const getProjectFiles = (p) => {
@@ -612,7 +612,7 @@ export default function Projects() {
         <div className="flex flex-col gap-10">
           {projectsList.map((project, index) => {
             const screenshots = getProjectScreenshots(project);
-            const video = getProjectVideo(project);
+            const videos = getProjectVideos(project);
             const files = getProjectFiles(project);
             const isFlagship = Boolean(project.isFlagship);
             const projectNumber = project.number || String(index + 1).padStart(2, '0');
@@ -728,25 +728,32 @@ export default function Projects() {
                       </div>
                     )}
 
-                    {/* Video Demonstration Embed */}
-                    {video && (
-                      <div className="my-6 rounded-2xl overflow-hidden border border-emerald-500/25 bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
-                        <div className="px-4 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between text-xs font-mono text-white/70">
-                          <span className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            {video.title || "Live Project Video Demo"}
-                          </span>
-                          <span className="text-emerald-400 font-bold">{video.desc || "1080p HD"}</span>
-                        </div>
-                        <video 
-                          controls 
-                          playsInline 
-                          preload="metadata" 
-                          className="w-full max-h-[440px] object-cover bg-black"
-                        >
-                          <source src={video.url} type="video/mp4" />
-                          Your browser does not support video playback.
-                        </video>
+                    {/* Video Demonstration Embeds (Support Multiple Videos) */}
+                    {videos.length > 0 && (
+                      <div className="my-6 flex flex-col gap-5">
+                        {videos.map((vid, vIdx) => (
+                          <div 
+                            key={vIdx}
+                            className="rounded-2xl overflow-hidden border border-emerald-500/25 bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+                          >
+                            <div className="px-4 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between text-xs font-mono text-white/70">
+                              <span className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                {vid.title || (videos.length > 1 ? `Live Video Demonstration #${vIdx + 1}` : "Live Project Video Demo")}
+                              </span>
+                              <span className="text-emerald-400 font-bold">{vid.desc || "1080p HD"}</span>
+                            </div>
+                            <video 
+                              controls 
+                              playsInline 
+                              preload="metadata" 
+                              className="w-full max-h-[440px] object-cover bg-black"
+                            >
+                              <source src={vid.url} type="video/mp4" />
+                              Your browser does not support video playback.
+                            </video>
+                          </div>
+                        ))}
                       </div>
                     )}
 
@@ -788,14 +795,6 @@ export default function Projects() {
 
                   {/* Action Buttons Row */}
                   <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-emerald-500/20">
-                    <Link
-                      to={`/projects/${getProjectSlug(project.id)}`}
-                      className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-sm font-semibold hover:bg-emerald-500/30 hover:text-white transition-all duration-300"
-                    >
-                      Case Study
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                    </Link>
-
                     {/* Repository Link with Auto-Styled GitHub Icon & Button */}
                     {links.github && (
                       <a 
