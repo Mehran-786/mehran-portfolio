@@ -4,6 +4,7 @@ import Projects from '../components/Projects';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
 import { getSiteUrl } from '../config/env';
+import { useTheme } from '../context/ThemeContext';
 
 const getProjectsSchemas = () => {
   const siteUrl = getSiteUrl();
@@ -133,6 +134,8 @@ const getProjectsSchemas = () => {
 
 export default function ProjectsPage() {
   const schemas = getProjectsSchemas();
+  const { effectiveTheme } = useTheme();
+  const isLight = effectiveTheme === 'light';
 
   return (
     <>
@@ -143,26 +146,28 @@ export default function ProjectsPage() {
         jsonLd={schemas}
       />
       <Navbar />
-      <main className="pt-24 min-h-[100dvh] bg-[#050f09]">
+      <main className={`pt-24 min-h-[100dvh] transition-colors duration-300 ${isLight ? 'bg-[#f0fdf4] text-slate-800' : 'bg-[#050f09] text-white'}`}>
         <header className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-8 pb-4">
-          <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">Portfolio Showcase</p>
-          <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
+          <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
+            Portfolio Showcase
+          </p>
+          <h1 className={`text-3xl md:text-5xl font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
             Projects — Mehran Rasool
           </h1>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-slate-400 mt-3 pt-2 border-b border-emerald-500/10 pb-3">
-            <span>By <a href="/about" className="text-emerald-400 font-semibold underline hover:text-emerald-300">Mehran Rasool</a></span>
+          <div className={`flex flex-wrap items-center gap-2 text-xs md:text-sm mt-3 pt-2 border-b pb-3 ${
+            isLight ? 'text-slate-600 border-emerald-500/20' : 'text-slate-400 border-emerald-500/10'
+          }`}>
+            <span>By <a href="/about" className={`font-semibold underline ${isLight ? 'text-emerald-700 hover:text-emerald-800' : 'text-emerald-400 hover:text-emerald-300'}`}>Mehran Rasool</a></span>
             <span className="text-emerald-500/40" aria-hidden="true">•</span>
             <span>Full-Stack &amp; Applied AI Developer</span>
             <span className="text-emerald-500/40" aria-hidden="true">•</span>
             <span>Last updated: September 20, 2026</span>
           </div>
 
-          <p className="mr-project-lede text-slate-300 max-w-3xl mt-4 text-base md:text-lg leading-relaxed">
+          <p className={`mr-project-lede max-w-3xl mt-4 text-base md:text-lg leading-relaxed ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
             Production web applications, cross-platform Flutter apps, secure LLM gateways, and systems engineered for high throughput, security, and real users.
           </p>
-
-
         </header>
 
         <Projects />

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import AOS from 'aos';
 import { projects as defaultStaticProjects } from '../data/portfolioData';
+import brandLogo from '../assets/logo.jpeg';
+import { useTheme } from '../context/ThemeContext';
 
 // Static Project Media Imports (Fallbacks & Default Assets)
 import aiDemoVideo from '../assets/projects/ai-gateway-demo.mp4';
@@ -132,6 +134,9 @@ const ZoomIcon = () => (
 );
 
 export default function Projects() {
+  const { effectiveTheme } = useTheme();
+  const isLight = effectiveTheme === 'light';
+
   const [projectsList, setProjectsList] = useState(defaultStaticProjects);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
@@ -550,14 +555,23 @@ export default function Projects() {
   };
 
   return (
-    <section id="projects" className="bg-[#050f09] pt-12 pb-32 px-6 md:px-12 w-full relative overflow-hidden font-sans">
+    <section 
+      id="projects" 
+      className={`pt-12 pb-32 px-6 md:px-12 w-full relative overflow-hidden font-sans transition-colors duration-300 ${
+        isLight ? 'bg-[#f0fdf4] text-slate-800' : 'bg-[#050f09] text-white'
+      }`}
+    >
       {/* Background ambient lighting */}
-      <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[160px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -left-40 w-[500px] h-[500px] bg-teal-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className={`absolute top-1/4 -right-40 w-[500px] h-[500px] rounded-full blur-[160px] pointer-events-none transition-colors duration-300 ${
+        isLight ? 'bg-emerald-400/20' : 'bg-emerald-600/10'
+      }`} />
+      <div className={`absolute bottom-1/4 -left-40 w-[500px] h-[500px] rounded-full blur-[160px] pointer-events-none transition-colors duration-300 ${
+        isLight ? 'bg-teal-400/20' : 'bg-teal-600/10'
+      }`} />
 
       <div className="max-w-6xl mx-auto relative z-10">
         
-        {/* Admin Bar or Discreet Login */}
+        {/* Admin Bar or Discreet Luxury Login Button */}
         {isAdmin ? (
           <div className="flex flex-wrap items-center justify-between gap-4 p-4 md:p-5 mb-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 backdrop-blur-md shadow-[0_4px_25px_rgba(16,185,129,0.15)]">
             <div className="flex items-center gap-2.5 text-emerald-300 text-sm font-bold">
@@ -583,27 +597,49 @@ export default function Projects() {
             </div>
           </div>
         ) : (
-          <div className="flex justify-end mb-6">
+          <div className="flex justify-end mb-8">
             <button
               type="button"
               onClick={() => setShowAdminLoginModal(true)}
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-all font-mono cursor-pointer"
-              title="Admin Authentication"
+              className={`group relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full border transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5 ${
+                isLight
+                  ? 'bg-white/90 hover:bg-white border-emerald-500/35 text-emerald-800 shadow-[0_2px_12px_rgba(16,185,129,0.15)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.25)]'
+                  : 'bg-gradient-to-r from-[#04150b]/90 to-[#071f11]/90 hover:from-[#082615] hover:to-[#0b331c] border-emerald-500/35 hover:border-emerald-400 text-emerald-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)]'
+              }`}
+              title="Site Owner Admin Console"
             >
-              <span>🔒</span> Admin Access
+              {/* Mehran's Avatar with glowing emerald pulse */}
+              <div className="relative w-6 h-6 rounded-full overflow-hidden border border-emerald-400/80 shadow-[0_0_8px_rgba(16,185,129,0.6)] shrink-0">
+                <img src={brandLogo} alt="Admin" className="w-full h-full object-cover" />
+                <span className="absolute inset-0 bg-emerald-500/15 group-hover:bg-transparent transition-colors" />
+              </div>
+
+              {/* Title & Key Icon */}
+              <div className="flex items-center gap-1.5 text-xs font-bold tracking-wide">
+                <span>Admin Portal</span>
+                <svg className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+
+              {/* Status Dot */}
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             </button>
           </div>
         )}
 
         {/* Section Header */}
         <div data-aos="fade-up" className="mb-16 text-center">
-          <div className="inline-block border border-emerald-500/30 rounded-full px-5 py-1.5 text-xs text-emerald-400 font-bold mb-5 shadow-sm bg-emerald-500/10 backdrop-blur-sm uppercase tracking-wider">
+          <div className={`inline-block border rounded-full px-5 py-1.5 text-xs font-bold mb-5 shadow-sm uppercase tracking-wider backdrop-blur-sm ${
+            isLight ? 'border-emerald-600/30 text-emerald-700 bg-emerald-100/70' : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+          }`}>
             Featured Systems
           </div>
-          <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 uppercase">
+          <h2 className={`text-3xl md:text-5xl font-black tracking-tight mb-4 uppercase ${isLight ? 'text-slate-900' : 'text-white'}`}>
             Signature Projects
           </h2>
-          <p className="text-white/60 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className={`text-base md:text-lg max-w-2xl mx-auto leading-relaxed ${isLight ? 'text-slate-600' : 'text-white/60'}`}>
             Real-world systems spanning multi-agent AI ecosystems, defense-grade LLM gateways, high-speed web utilities, and C++ game engines.
           </p>
         </div>
@@ -630,20 +666,25 @@ export default function Projects() {
                 data-aos-delay={index * 100}
                 className={`relative rounded-3xl p-[1px] group transition-all duration-500 ${
                   isFlagship 
-                    ? 'bg-gradient-to-br from-emerald-500/60 via-teal-500/20 to-teal-500/40 hover:from-emerald-400 hover:via-teal-400/50 hover:to-teal-400 shadow-[0_10px_40px_rgba(16,185,129,0.2)]' 
-                    : 'bg-white/10 hover:bg-emerald-500/30'
+                    ? (isLight 
+                        ? 'bg-gradient-to-br from-emerald-500/50 via-teal-500/20 to-teal-500/30 shadow-[0_10px_35px_rgba(16,185,129,0.15)] hover:shadow-[0_15px_45px_rgba(16,185,129,0.25)]' 
+                        : 'bg-gradient-to-br from-emerald-500/60 via-teal-500/20 to-teal-500/40 hover:from-emerald-400 hover:via-teal-400/50 hover:to-teal-400 shadow-[0_10px_40px_rgba(16,185,129,0.2)]'
+                      )
+                    : (isLight ? 'bg-emerald-900/15 hover:bg-emerald-500/40 shadow-md' : 'bg-white/10 hover:bg-emerald-500/30')
                 }`}
               >
                 <div className={`rounded-3xl p-6 md:p-10 h-full backdrop-blur-xl transition-all duration-500 flex flex-col justify-between ${
-                  isFlagship 
-                    ? 'bg-[#0e0824]/95 group-hover:bg-[#120a2e]/95' 
-                    : 'bg-[#0c071d]/90 group-hover:bg-[#100926]/90'
+                  isLight 
+                    ? (isFlagship ? 'bg-white/95 group-hover:bg-white text-slate-800' : 'bg-white/90 group-hover:bg-white/95 text-slate-800')
+                    : (isFlagship ? 'bg-[#0e0824]/95 group-hover:bg-[#120a2e]/95 text-white' : 'bg-[#0c071d]/90 group-hover:bg-[#100926]/90 text-white')
                 }`}>
                   <div>
                     {/* Top Meta: Badge, Number & Admin Action Toolbar */}
                     <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
                       {project.badge ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-violet-300 bg-emerald-500/15 px-3.5 py-1.5 rounded-full border border-emerald-500/30">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase px-3.5 py-1.5 rounded-full border ${
+                          isLight ? 'text-emerald-800 bg-emerald-100 border-emerald-300' : 'text-violet-300 bg-emerald-500/15 border-emerald-500/30'
+                        }`}>
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                           {project.badge}
                         </span>
@@ -674,17 +715,21 @@ export default function Projects() {
                             </button>
                           </div>
                         )}
-                        <span className="text-4xl md:text-5xl font-black text-white/15 font-serif italic">{projectNumber}</span>
+                        <span className={`text-4xl md:text-5xl font-black font-serif italic ${isLight ? 'text-emerald-950/15' : 'text-white/15'}`}>{projectNumber}</span>
                       </div>
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-4 group-hover:text-violet-300 transition-colors">
+                    <h3 className={`text-2xl md:text-3xl font-black tracking-tight mb-4 transition-colors ${
+                      isLight ? 'text-slate-900 group-hover:text-emerald-700' : 'text-white group-hover:text-violet-300'
+                    }`}>
                       {project.title}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-white/70 text-sm md:text-base leading-relaxed mb-6 font-normal whitespace-pre-line">
+                    <p className={`text-sm md:text-base leading-relaxed mb-6 font-normal whitespace-pre-line ${
+                      isLight ? 'text-slate-700' : 'text-white/70'
+                    }`}>
                       {project.description}
                     </p>
 
@@ -701,7 +746,11 @@ export default function Projects() {
                             <div 
                               key={idx}
                               onClick={() => setActiveModal({ img: item.img, title: item.title, desc: item.desc })}
-                              className="group/img relative rounded-2xl overflow-hidden border border-emerald-500/20 bg-black/40 cursor-pointer hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all duration-300"
+                              className={`group/img relative rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 ${
+                                isLight
+                                  ? 'border-emerald-500/30 bg-slate-100 hover:border-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]'
+                                  : 'border-emerald-500/20 bg-black/40 hover:border-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                              }`}
                             >
                               <div className="aspect-video overflow-hidden relative">
                                 <img 
@@ -715,14 +764,16 @@ export default function Projects() {
                                   </span>
                                 </div>
                               </div>
-                              <div className="p-2.5 bg-[#140b2e]/90 text-left border-t border-emerald-500/10">
-                                <p className="text-white text-xs font-bold truncate">{item.title}</p>
-                                {item.desc && <p className="text-violet-300/70 text-[10px] truncate">{item.desc}</p>}
+                              <div className={`p-2.5 text-left border-t ${
+                                isLight ? 'bg-slate-50 border-emerald-500/15' : 'bg-[#140b2e]/90 border-emerald-500/10'
+                              }`}>
+                                <p className={`${isLight ? 'text-slate-900' : 'text-white'} text-xs font-bold truncate`}>{item.title}</p>
+                                {item.desc && <p className={`${isLight ? 'text-emerald-700' : 'text-violet-300/70'} text-[10px] truncate`}>{item.desc}</p>}
                               </div>
                             </div>
                           ))}
                         </div>
-                        <p className="text-emerald-400/60 text-xs mt-2.5 italic text-right font-mono flex items-center justify-end gap-1">
+                        <p className={`${isLight ? 'text-emerald-700/80' : 'text-emerald-400/60'} text-xs mt-2.5 italic text-right font-mono flex items-center justify-end gap-1`}>
                           <ZoomIcon /> Click any view to inspect HD interface details
                         </p>
                       </div>
@@ -734,7 +785,9 @@ export default function Projects() {
                         {videos.map((vid, vIdx) => (
                           <div 
                             key={vIdx}
-                            className="rounded-2xl overflow-hidden border border-emerald-500/25 bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+                            className={`rounded-2xl overflow-hidden border shadow-lg ${
+                              isLight ? 'border-emerald-500/35 bg-black' : 'border-emerald-500/25 bg-black/60 shadow-[0_10px_30px_rgba(0,0,0,0.6)]'
+                            }`}
                           >
                             <div className="px-4 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between text-xs font-mono text-white/70">
                               <span className="flex items-center gap-2">
@@ -767,12 +820,14 @@ export default function Projects() {
                             target="_blank"
                             rel="noopener noreferrer"
                             download={file.name}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-emerald-500/20 text-white hover:border-emerald-400 hover:bg-emerald-500/10 transition-all text-xs font-medium"
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-medium ${
+                              isLight ? 'bg-emerald-50 border-emerald-200 text-slate-800 hover:border-emerald-400 hover:bg-emerald-100' : 'bg-white/5 border-emerald-500/20 text-white hover:border-emerald-400 hover:bg-emerald-500/10'
+                            }`}
                           >
                             <span className="text-base">📄</span>
                             <span className="font-bold">{file.title || file.name || "Project Documentation"}</span>
                             {file.size && <span className="opacity-60 text-[11px]">({file.size})</span>}
-                            <span className="text-emerald-400 text-[11px] underline ml-1">Download PDF ↗</span>
+                            <span className="text-emerald-600 text-[11px] underline ml-1 font-semibold">Download PDF ↗</span>
                           </a>
                         ))}
                       </div>
@@ -784,7 +839,9 @@ export default function Projects() {
                         {techTags.map((tag) => (
                           <span 
                             key={tag}
-                            className="px-3 py-1 text-xs font-semibold text-violet-200 bg-emerald-500/10 rounded-full border border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-400 transition-all duration-300 cursor-default"
+                            className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all duration-300 cursor-default ${
+                              isLight ? 'text-emerald-900 bg-emerald-50 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400' : 'text-violet-200 bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-400'
+                            }`}
                           >
                             {tag}
                           </span>
@@ -794,14 +851,18 @@ export default function Projects() {
                   </div>
 
                   {/* Action Buttons Row */}
-                  <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-emerald-500/20">
+                  <div className={`flex flex-wrap items-center gap-3 pt-4 border-t ${isLight ? 'border-emerald-500/20' : 'border-emerald-500/20'}`}>
                     {/* Repository Link with Auto-Styled GitHub Icon & Button */}
                     {links.github && (
                       <a 
                         href={links.github}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/20 text-white text-sm font-semibold hover:bg-white hover:text-black transition-all duration-300 group/btn"
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 group/btn ${
+                          isLight 
+                            ? 'bg-slate-900 text-white hover:bg-emerald-700 hover:text-white border border-slate-900' 
+                            : 'bg-white/10 border border-white/20 text-white hover:bg-white hover:text-black'
+                        }`}
                       >
                         <GitHubIcon />
                         View Repository
@@ -820,7 +881,9 @@ export default function Projects() {
                         {links.demoLabel || "Open Live Application"}
                       </a>
                     ) : (
-                      <span className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold bg-white/5 text-white/50 border border-white/10">
+                      <span className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold ${
+                        isLight ? 'bg-slate-100 text-slate-600 border border-slate-200' : 'bg-white/5 text-white/50 border border-white/10'
+                      }`}>
                         Enterprise Architecture
                       </span>
                     )}

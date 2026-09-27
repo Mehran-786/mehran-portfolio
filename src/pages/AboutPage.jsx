@@ -515,6 +515,32 @@ const aboutCss = `
   min-height: 100dvh;
   padding: clamp(5rem, 10vw, 7.5rem) clamp(1rem, 5vw, 3rem) clamp(3rem, 7vw, 5rem);
   line-height: 1.7;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="light"] .mr-about-page {
+  --mr-bg: #f0fdf4;
+  --mr-surface: #ffffff;
+  --mr-line: rgba(16, 185, 129, 0.25);
+  --mr-text: #064e3b;
+  --mr-muted: #047857;
+  --mr-accent: #059669;
+  --mr-accent-glow: rgba(5, 150, 105, 0.2);
+}
+[data-theme="light"] .mr-about-page h1,
+[data-theme="light"] .mr-about-page h2 {
+  color: #064e3b;
+}
+[data-theme="light"] .mr-about-page p,
+[data-theme="light"] .mr-about-page .mr-lede {
+  color: #1e293b;
+}
+[data-theme="light"] .mr-about-page .mr-practice {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+[data-theme="light"] .mr-spec dd {
+  color: #064e3b;
 }
 
 .mr-about-container {

@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SEO from '../components/SEO';
 import { getSiteUrl, getR2Url } from '../config/env';
+import { useTheme } from '../context/ThemeContext';
 
 const VERDICTS = ["Excellent", "Good", "Average", "Needs work"];
 
@@ -23,14 +24,8 @@ function timeAgo(dateString) {
 }
 
 export default function ReviewsPage() {
-  // Tri-State Theme: 'default' | 'dark' | 'light'
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('mr_reviews_theme') || 'default';
-    } catch {
-      return 'default';
-    }
-  });
+  // Global Theme from context ('dark' | 'light')
+  const { effectiveTheme: theme } = useTheme();
 
   // User Auth state
   const [currentUser, setCurrentUser] = useState(() => {
@@ -131,13 +126,6 @@ export default function ReviewsPage() {
   const otpInputsRef = useRef([]);
   const replyInputRef = useRef(null);
 
-  // Persist theme
-  useEffect(() => {
-    try {
-      localStorage.setItem('mr_reviews_theme', theme);
-    } catch {}
-  }, [theme]);
-
   // Fetch reviews from Postgres DB
   const fetchReviews = useCallback(async (adminMode = isAdmin) => {
     setIsLoadingReviews(true);
@@ -224,15 +212,6 @@ export default function ReviewsPage() {
       replyInputRef.current.focus({ preventScroll: true });
     }
   }, [replyTargetId, replyToParent]);
-
-  // Tri-State Theme Toggle (strictly adhering to rules)
-  const handleToggleDark = () => {
-    setTheme(theme === 'dark' ? 'default' : 'dark');
-  };
-
-  const handleToggleLight = () => {
-    setTheme(theme === 'light' ? 'default' : 'light');
-  };
 
   // User Auth Submit
   const handleUserAuthSubmit = (e) => {
@@ -966,30 +945,9 @@ export default function ReviewsPage() {
                 </p>
               </div>
 
-              {/* Floating Controls */}
-              <div className="mr-controls-bar">
-                {/* Tri-State Theme Toggle */}
-                <div className="mr-tri-toggle" role="group" aria-label="Theme mode switcher">
-                  <button
-                    type="button"
-                    className={`mr-toggle-btn ${theme === 'dark' ? 'active' : ''}`}
-                    onClick={handleToggleDark}
-                    aria-pressed={theme === 'dark'}
-                  >
-                    DARK
-                  </button>
-                  <button
-                    type="button"
-                    className={`mr-toggle-btn ${theme === 'light' ? 'active' : ''}`}
-                    onClick={handleToggleLight}
-                    aria-pressed={theme === 'light'}
-                  >
-                    LIGHT
-                  </button>
-                </div>
-
-                {/* Admin Status / Trigger */}
-                {isAdmin ? (
+              {/* Admin Active Controls (Only shown for authenticated owner) */}
+              {isAdmin && (
+                <div className="mr-controls-bar">
                   <div className="mr-admin-badge-group">
                     <span className="mr-admin-active-badge">👑 Admin Active</span>
                     <button
@@ -1007,24 +965,8 @@ export default function ReviewsPage() {
                     </button>
                     <button onClick={handleAdminLogout} className="mr-btn-ghost text-xs">Logout</button>
                   </div>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setAdminStep(1);
-                      setAdminError('');
-                      setShowAdminModal(true);
-                    }}
-                    className="mr-admin-trigger-btn"
-                    title="Site Owner Admin Access"
-                    aria-label="Admin Login"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span>Admin</span>
-                  </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Pinned Aggregate Summary Card */}
