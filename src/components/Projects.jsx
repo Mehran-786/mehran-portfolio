@@ -325,7 +325,10 @@ export default function Projects() {
     // Resolve media list
     let initialMedia = [];
     if (Array.isArray(project.media) && project.media.length > 0) {
-      initialMedia = project.media;
+      initialMedia = project.media.map(m => ({
+        ...m,
+        url: resolveAssetUrl(m.url),
+      }));
     } else if (staticScreenshotsMap[project.id]) {
       initialMedia = staticScreenshotsMap[project.id].map(s => ({
         type: 'image',
@@ -353,6 +356,8 @@ export default function Projects() {
       if (['mp4', 'webm'].includes(ext) || file.type.startsWith('video/')) fileType = 'video';
       else if (ext === 'pdf' || file.type === 'application/pdf') fileType = 'file';
 
+      const previewUrl = fileType === 'image' ? URL.createObjectURL(file) : '';
+
       const placeholderItem = {
         id: tempId,
         type: fileType,
@@ -361,6 +366,7 @@ export default function Projects() {
         desc: '',
         size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
         url: '',
+        previewUrl,
         key: '',
         isUploading: true,
       };
@@ -1032,8 +1038,12 @@ export default function Projects() {
                       >
                         {/* Type Icon or Thumbnail */}
                         <div className="w-12 h-10 rounded-lg overflow-hidden bg-black shrink-0 flex items-center justify-center border border-white/10">
-                          {m.type === 'image' && m.url ? (
-                            <img src={m.url} alt="thumb" className="w-full h-full object-cover" />
+                          {m.type === 'image' && (m.previewUrl || m.url) ? (
+                            <img 
+                              src={m.previewUrl || resolveAssetUrl(m.url)} 
+                              alt={m.title || "thumbnail"} 
+                              className="w-full h-full object-cover" 
+                            />
                           ) : m.type === 'video' ? (
                             <span className="text-lg">🎬</span>
                           ) : m.type === 'file' ? (
