@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import AOS from 'aos';
 import { projects as defaultStaticProjects } from '../data/portfolioData';
 
 // Static Project Media Imports (Fallbacks & Default Assets)
@@ -22,6 +23,59 @@ import vvEmployeePerf from '../assets/projects/video-vision-employee-performance
 import toolMain from '../assets/projects/tool-website-main.jpeg';
 import toolFeatures from '../assets/projects/tool-website-features.jpeg';
 import toolReady from '../assets/projects/tool-website-ready.jpeg';
+
+// Static asset mapping to resolve development /src/ paths to bundled production assets
+const staticAssetMap = {
+  '/src/assets/projects/video-vision-multi-agent.jpeg': vvMultiAgent,
+  'video-vision-multi-agent.jpeg': vvMultiAgent,
+  '/src/assets/projects/video-vision-trend.jpeg': vvTrend,
+  'video-vision-trend.jpeg': vvTrend,
+  '/src/assets/projects/video-vision-engines.jpeg': vvEngines,
+  'video-vision-engines.jpeg': vvEngines,
+  '/src/assets/projects/video-vision-analytics.jpeg': vvAnalytics,
+  'video-vision-analytics.jpeg': vvAnalytics,
+  '/src/assets/projects/video-vision-employee-section.jpeg': vvEmployeeSec,
+  'video-vision-employee-section.jpeg': vvEmployeeSec,
+  '/src/assets/projects/video-vision-employee-performance.jpeg': vvEmployeePerf,
+  'video-vision-employee-performance.jpeg': vvEmployeePerf,
+  '/src/assets/projects/tool-website-main.jpeg': toolMain,
+  'tool-website-main.jpeg': toolMain,
+  '/src/assets/projects/tool-website-features.jpeg': toolFeatures,
+  'tool-website-features.jpeg': toolFeatures,
+  '/src/assets/projects/tool-website-ready.jpeg': toolReady,
+  'tool-website-ready.jpeg': toolReady,
+  '/src/assets/projects/is-portal.png': isPortalImg,
+  'is-portal.png': isPortalImg,
+  '/src/assets/projects/is-crack.png': isCrackImg,
+  'is-crack.png': isCrackImg,
+  '/src/assets/projects/is-bruteforce.png': isBruteforceImg,
+  'is-bruteforce.png': isBruteforceImg,
+  '/src/assets/projects/game-lobby.png': gameLobbyImg,
+  'game-lobby.png': gameLobbyImg,
+  '/src/assets/projects/game-playing.png': gamePlayingImg,
+  'game-playing.png': gamePlayingImg,
+  '/src/assets/projects/game-boss.png': gameBossImg,
+  'game-boss.png': gameBossImg,
+  '/src/assets/projects/game-inventory.png': gameInventoryImg,
+  'game-inventory.png': gameInventoryImg,
+  '/src/assets/projects/game-cart.png': gameCartImg,
+  'game-cart.png': gameCartImg,
+  '/src/assets/projects/game-win.png': gameWinImg,
+  'game-win.png': gameWinImg,
+  '/src/assets/projects/ai-gateway-demo.mp4': aiDemoVideo,
+  'ai-gateway-demo.mp4': aiDemoVideo,
+};
+
+const resolveAssetUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  const cleanName = url.split('/').pop().split('?')[0];
+  if (staticAssetMap[cleanName]) return staticAssetMap[cleanName];
+  if (staticAssetMap[url]) return staticAssetMap[url];
+  return url;
+};
 
 const getProjectSlug = (id) => {
   if (id === 'tool-website') return 'downsocial';
@@ -117,7 +171,16 @@ export default function Projects() {
   useEffect(() => {
     checkAdminSession();
     fetchProjects();
+    AOS.init({ duration: 800, once: true, easing: 'ease-out' });
   }, []);
+
+  // Refresh scroll animations when project list loads or changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      AOS.refresh();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [projectsList]);
 
   const checkAdminSession = async () => {
     try {
@@ -446,11 +509,13 @@ export default function Projects() {
   // Helper to resolve media for a project card
   const getProjectScreenshots = (p) => {
     if (Array.isArray(p.media) && p.media.filter(m => m.type === 'image' && m.url).length > 0) {
-      return p.media.filter(m => m.type === 'image').map(m => ({
-        img: m.url,
-        title: m.title || p.title,
-        desc: m.desc || '',
-      }));
+      return p.media
+        .filter(m => m.type === 'image' && m.url)
+        .map(m => ({
+          img: resolveAssetUrl(m.url),
+          title: m.title || p.title,
+          desc: m.desc || '',
+        }));
     }
     return staticScreenshotsMap[p.id] || [];
   };
@@ -458,7 +523,12 @@ export default function Projects() {
   const getProjectVideo = (p) => {
     if (Array.isArray(p.media)) {
       const vid = p.media.find(m => m.type === 'video' && m.url);
-      if (vid) return vid;
+      if (vid) {
+        return {
+          ...vid,
+          url: resolveAssetUrl(vid.url),
+        };
+      }
     }
     if (p.id === 'secure-llm-gateway') {
       return { url: aiDemoVideo, title: 'Live AI Gateway Video Demo', desc: '1080p HD' };
@@ -540,6 +610,12 @@ export default function Projects() {
             const files = getProjectFiles(project);
             const isFlagship = Boolean(project.isFlagship);
             const projectNumber = project.number || String(index + 1).padStart(2, '0');
+            const techTags = Array.isArray(project.techTags) 
+              ? project.techTags 
+              : (typeof project.techTags === 'string' ? JSON.parse(project.techTags || '[]') : []);
+            const links = typeof project.links === 'string' 
+              ? JSON.parse(project.links || '{}') 
+              : (project.links || {});
 
             return (
               <div 
@@ -690,9 +766,9 @@ export default function Projects() {
                     )}
 
                     {/* Tech Tags */}
-                    {project.techTags && project.techTags.length > 0 && (
+                    {techTags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-8">
-                        {project.techTags.map((tag) => (
+                        {techTags.map((tag) => (
                           <span 
                             key={tag}
                             className="px-3 py-1 text-xs font-semibold text-violet-200 bg-emerald-500/10 rounded-full border border-emerald-500/25 hover:bg-emerald-500/20 hover:border-emerald-400 transition-all duration-300 cursor-default"
@@ -715,9 +791,9 @@ export default function Projects() {
                     </Link>
 
                     {/* Repository Link with Auto-Styled GitHub Icon & Button */}
-                    {project.links?.github && (
+                    {links.github && (
                       <a 
-                        href={project.links.github}
+                        href={links.github}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/20 text-white text-sm font-semibold hover:bg-white hover:text-black transition-all duration-300 group/btn"
@@ -728,15 +804,15 @@ export default function Projects() {
                     )}
 
                     {/* Website / Live Link with Auto-Styled Gradient Button */}
-                    {project.links?.demo ? (
+                    {links.demo ? (
                       <a 
-                        href={project.links.demo}
+                        href={links.demo}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] transition-all duration-300 transform hover:scale-105"
                       >
                         <ExternalLinkIcon />
-                        {project.links.demoLabel || "Open Live Application"}
+                        {links.demoLabel || "Open Live Application"}
                       </a>
                     ) : (
                       <span className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold bg-white/5 text-white/50 border border-white/10">

@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ProjectsPage from './pages/ProjectsPage';
@@ -8,7 +10,7 @@ import ContactPage from './pages/ContactPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// Scroll to top or anchor on route change
+// Scroll to top or anchor on route change and refresh scroll animations
 function ScrollManager() {
   const { pathname, hash } = useLocation();
 
@@ -17,16 +19,28 @@ function ScrollManager() {
       const element = document.querySelector(hash);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => AOS.refresh(), 100);
         return;
       }
     }
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    setTimeout(() => {
+      AOS.refresh();
+    }, 100);
   }, [pathname, hash]);
 
   return null;
 }
 
 export default function App() {
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: 'ease-out',
+      offset: 30,
+    });
+  }, []);
   return (
     <BrowserRouter>
       <ScrollManager />
